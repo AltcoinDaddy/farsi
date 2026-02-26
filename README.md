@@ -94,5 +94,3 @@ If you're checking us out for the **PL Genesis Hackathon**:
 3.  **Start a movement**: Create a Social Pot and see how easy it is to save with the group.
 
 ---
-
-*Hand-crafted for the **PL Genesis Hackathon** — Flow Consumer DeFi Track.*
