@@ -1,78 +1,61 @@
-# 🇮Farsi - Premium Consumer DeFi on Flow EVM
+# 🇮🇷 Farsi: Finance, but for Humans
 
-**Simple. Social. Yield-Bearing.**  
-Farsi is a mobile-first, non-custodial finance application built to bring the power of Decentralized Finance (DeFi) to the next billion users through the high-performance [Flow EVM](https://flow.com/evm) network.
+**The money app that makes sense.**  
+Farsi is a mobile-first wallet built on [Flow EVM](https://flow.com/evm) that takes the technical headache out of DeFi. We’ve stripped away the jargon and the complexity to give you a premium finance experience that feels just as natural as your favorite banking app—only smarter.
 
-Built for the **PL Genesis Hackathon**, Farsi reimagines how users interact with their money—removing crypto complexity while retaining the security of self-custody.
-
----
-
-## 💡 The "Why" behind Farsi
-
-### The Problem
-Most DeFi applications today are built for "crypto natives"—they are clunky, require complex gas management, and lack the social connection that makes traditional money meaningful. This keeps mainstream users from accessing high-yield opportunities and transparent financial tools.
-
-### The Solution: Farsi
-Farsi bridges the gap by providing a **premium, consumer-grade experience** on top of enterprise-grade smart contracts. By leveraging **Flow EVM**, we offer:
-- **Zero Friction**: Sponsored transactions mean users don't need to hold FLOW just to move their money.
-- **Consumer Familiarity**: Features like "Social Pots" feel like modern banking apps (Splitwise/Venmo), not technical smart contracts.
-- **Institutional Quality**: ERC-4626 vault standards ensure industry-leading security for user yield.
+Whether you're looking to earn yield on your savings or pool money with your friends for a weekend trip, Farsi handles the heavy lifting on-chain so you can focus on your goals.
 
 ---
 
-## 📸 Overview
+## 💡 Why Farsi?
+
+Money is social, but crypto hasn't been. Most DeFi apps feel like they were built for robots—filled with gas fees, seed phrases, and complicated charts. Farsi changes that.
+
+We believe your money should work for *you*, and it should be easy to manage with the people you care about. By building on **Flow**, we’ve created an experience where "gas" isn't a word you'll need to know, and "security" is a given. It’s the stability of the blockchain with the simplicity of a flick of your thumb.
+
+---
+
+## 📸 Snapshot of the Experience
 
 | | | |
 |:---:|:---:|:---:|
 | ![Dashboard](screenshots/dashboard.png) | ![Earn](screenshots/earn.png) | ![Social](screenshots/social.png) |
-| **Dashboard** | **Earn Yield** | **Social Pots** |
+| **Your Home Base** | **Grow Your Wealth** | **Save with Friends** |
 | ![Buy](screenshots/buy.png) | ![Receipt](screenshots/receipt.png) | ![Share](screenshots/receipt-share.png) |
-| **Buy Crypto** | **Receipts** | **Share & Social** |
+| **Get Started Fast** | **Track Every Penny** | **Celebrate Progress** |
 
 ---
 
-## ✨ Core Features
+## ✨ What counts?
 
-### 💰 Farsi Earn (Yield Vault)
-Turn idle assets into productive ones. Farsi utilizes an **ERC-4626 standard Yield Vault** allowing users to deposit `mUSDC` and earn automated yields.
-- **Real-time Stats**: Track your vault shares and current asset valuation.
-- **Instant Liquidity**: Deposit and withdraw anytime with low fees.
+### 💰 **Farsi Earn: Set it and Forget it**
+Don't let your money sit idle. Slip your `mUSDC` into our Earn vault and watch it grow. It uses the industry-standard ERC-4626 vault protocol, so you get the best security and instant access to your funds whenever you need them. No lock-ups, no catch.
 
-### 🤝 Social Pots (Joint Savings)
-Save for life's big goals with friends. Social Pots allow group contributions to a shared smart contract.
-- **Goal Tracking**: Set a target amount and track progress collectively.
-- **Creator Controlled**: Only the pot creator can withdraw funds once the target is met.
-- **Transparent**: All contributions are tracked on-chain for the group to see.
+### 🤝 **Social Pots: Bigger Goals, Together**
+Saving for a group gift? Planning the ultimate road trip? Social Pots let you and your friends pool funds together in a transparent, on-chain way. 
+- **Stay on Track**: Set a goal and see exactly how close the group is to hitting it.
+- **Creator Rules**: Only the pot creator can pull the trigger on a withdrawal once the target is reached, keeping things organized and safe.
 
-### ⛽ Gas Abstraction & Premium UX
-Farsi is designed for mass adoption:
-- **Sponsored Transactions**: No need for users to worry about gas fees (Powered by Flow's native gas abstraction).
-- **Mobile First**: Fully optimized Progressive Web App (PWA) with "Add to Home Screen" support.
-- **Non-Custodial**: Powered by **Privy / RainbowKit** for secure, social-login supported wallet management.
+### ⛽ **Magic Behind the Scenes**
+- **No More "Gas"**: Thanks to Flow EVM's sponsored transactions, the fees are on us. You just click and go.
+- **Always With You**: Farsi is a Progressive Web App (PWA). Just "Add to Home Screen" and it's there whenever you need it, even if your connection is spotty.
+- **Log in your way**: No complicated setup. Use your social logins through Privy and you're in.
 
 ---
 
-## 🛠 Tech Stack
+## 🛠 What's under the hood?
 
-### Frontend & Web3
-- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Wallet Interaction**: [Wagmi](https://wagmi.sh/), [viem](https://viem.sh/), [RainbowKit](https://www.rainbowkit.com/)
-- **Auth**: [Privy](https://privy.io/) (Social Login Support)
-- **PWA**: `next-pwa` for native mobile feel.
-
-### Smart Contracts (Solidity)
-- **Standard**: ERC-20 (MockUSDC), ERC-4626 (YieldVault)
-- **Factory Pattern**: SharedPotFactory for deploying individual group savings contracts.
-- **Tools**: Hardhat, OpenZeppelin.
+We use the best tech in the game to keep things fast, secure, and beautiful.
+- **Frontend**: Next.js 14 & Tailwind CSS (for that premium feel).
+- **Web3 Tools**: Wagmi & RainbowKit (making wallet connections a breeze).
+- **Smart Contracts**: Solidity (Standard-setting ERC-20 & ERC-4626).
+- **Network**: Flow EVM Testnet (Chain ID: 545).
 
 ---
 
-## 📍 Deployment Details (Flow EVM Testnet)
+## 📍 Where we're live (Testnet)
 
-Farsi is live on the Flow EVM Testnet (Chain ID: `545`).
-
-| Contract | Address |
+| Asset / Contract | Address |
 | :--- | :--- |
 | **Mock mUSDC** | `0x63F28bF688e38429E4123503cdba1A9237aAe8B9` |
 | **Yield Vault** | `0x8DF0868e0f0c00C73e2315C74D6CFaD42Db4bBD2` |
@@ -80,38 +63,36 @@ Farsi is live on the Flow EVM Testnet (Chain ID: `545`).
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Jump In
 
-### 1. Installation
+### 1. Set it up
 ```bash
 git clone https://github.com/AltcoinDaddy/farsi.git
 cd farsi
 npm install
 ```
 
-### 2. Configuration
-Create a `.env.local` file in the root directory:
+### 2. Configure
+Toss your keys into a `.env.local` file:
 ```env
 NEXT_PUBLIC_WC_PROJECT_ID=your_rainbowkit_project_id
 NEXT_PUBLIC_FLOW_RPC=https://testnet.evm.nodes.onflow.org
-PRIVATE_KEY=your_private_key_for_deployments
+PRIVATE_KEY=your_private_key
 ```
 
-### 3. Local Development
+### 3. Go Live
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ---
 
-## 🏁 Hackathon Journey
-If you are testing the app for the hackathon:
-1.  **Fund your wallet**: Use the "Get 1000" faucet button on the **Earn** screen to get test `mUSDC`.
-2.  **Deposit**: Put some `mUSDC` into the vault.
-3.  **Start a Pot**: Go to the **Social** screen and create a new pot.
-4.  **Contribute**: Add funds to any active pot.
+## 🏁 How to Demo
+If you're checking us out for the **PL Genesis Hackathon**:
+1.  **Get funded**: Head to the **Earn** screen and tap the "Get 1000" button for your test funds.
+2.  **Grow it**: Deposit some of that into the vault.
+3.  **Start a movement**: Create a Social Pot and see how easy it is to save with the group.
 
 ---
 
-*Built for the **PL Genesis Hackathon** — Flow Consumer DeFi Track.*
+*Hand-crafted for the **PL Genesis Hackathon** — Flow Consumer DeFi Track.*
