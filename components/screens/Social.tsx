@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useReadContract, useWriteContract } from 'wagmi';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import SharedPotFactoryABI from '@/lib/abi/SharedPotFactory.json';
 import SharedPotABI from '@/lib/abi/SharedPot.json';
@@ -15,6 +15,9 @@ export default function SocialScreen() {
     const { user } = usePrivy();
     const { writeContractAsync } = useWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
+    const [showModal, setShowModal] = React.useState(false);
+    const [potName, setPotName] = React.useState('');
+    const [potTarget, setPotTarget] = React.useState('500');
 
     // Fetch all pots from the factory
     const { data: pots, isLoading, refetch: refetchPots } = useReadContract({
@@ -24,22 +27,24 @@ export default function SocialScreen() {
     });
 
     const handleCreatePot = async () => {
-        if (!user?.wallet?.address) return;
+        if (!user?.wallet?.address || !potName || !potTarget) return;
         setIsUpdating(true);
         const walletAddress = user.wallet.address as `0x${string}`;
 
         try {
-            console.log('Creating new pot...');
+            console.log('Creating new pot:', potName);
             const createHash = await writeContractAsync({
                 address: CONTRACT_ADDRESSES.SharedPotFactory as `0x${string}`,
                 abi: SharedPotFactoryABI,
                 functionName: 'createPot',
-                args: ['New Savings Pot', parseUnits('100', 18)], // Default values for demo
+                args: [potName, parseUnits(potTarget, 18)],
                 account: walletAddress,
                 chain: flowEVMTestnet,
             });
             await waitForTransactionReceipt(config, { hash: createHash });
             await refetchPots();
+            setShowModal(false);
+            setPotName('');
             console.log('Pot created!');
         } catch (error) {
             console.error('Create pot failed:', error);
@@ -55,11 +60,10 @@ export default function SocialScreen() {
                 <h1 className="text-neutral-dark text-xl font-bold">Social Pots</h1>
                 <div className="flex items-center justify-end">
                     <button
-                        onClick={handleCreatePot}
-                        disabled={isUpdating}
-                        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+                        onClick={() => setShowModal(true)}
+                        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
                     >
-                        <span className="material-symbols-outlined">{isUpdating ? 'sync' : 'add'}</span>
+                        <span className="material-symbols-outlined">add</span>
                     </button>
                 </div>
             </header>
@@ -93,26 +97,54 @@ export default function SocialScreen() {
                             ))}
                     </div>
                 </div>
+            </main>
 
-                {/* Quick Actions / Suggestions */}
-                <div className="mt-4">
-                    <h3 className="text-neutral-dark text-base font-bold mb-3">Popular with Friends</h3>
-                    <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-                        <div className="min-w-[140px] p-3 rounded-xl bg-white border border-slate-100 shadow-sm flex flex-col items-center gap-2">
-                            <div className="h-10 w-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center">
-                                <span className="material-symbols-outlined">celebration</span>
+            {/* Creation Modal */}
+            {showModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+                        <div className="p-8 space-y-6">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-2xl font-black text-slate-900tracking-tight">New Pot</h2>
+                                <button onClick={() => setShowModal(false)} className="text-slate-400">
+                                    <span className="material-symbols-outlined">close</span>
+                                </button>
                             </div>
-                            <span className="text-xs font-bold text-center text-neutral-dark">Birthday Gift</span>
-                        </div>
-                        <div className="min-w-[140px] p-3 rounded-xl bg-white border border-slate-100 shadow-sm flex flex-col items-center gap-2">
-                            <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
-                                <span className="material-symbols-outlined">directions_car</span>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Pot Name</label>
+                                    <input
+                                        type="text"
+                                        value={potName}
+                                        onChange={(e) => setPotName(e.target.value)}
+                                        placeholder="e.g. Summer Trip 2024"
+                                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-primary outline-none"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Savings Target (mUSDC)</label>
+                                    <input
+                                        type="number"
+                                        value={potTarget}
+                                        onChange={(e) => setPotTarget(e.target.value)}
+                                        placeholder="500"
+                                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-primary outline-none"
+                                    />
+                                </div>
                             </div>
-                            <span className="text-xs font-bold text-center text-neutral-dark">Road Trip</span>
+
+                            <button
+                                onClick={handleCreatePot}
+                                disabled={isUpdating || !potName || !potTarget}
+                                className="w-full bg-primary text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50 active:scale-95"
+                            >
+                                {isUpdating ? 'Creating...' : 'Start Pot'}
+                            </button>
                         </div>
                     </div>
                 </div>
-            </main>
+            )}
         </div>
     );
 }
@@ -121,6 +153,7 @@ function PotCard({ address }: { address: string }) {
     const { user } = usePrivy();
     const { writeContractAsync } = useWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
+    const [amount, setAmount] = React.useState('10');
 
     // Fetch account allowance for this pot
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -155,10 +188,10 @@ function PotCard({ address }: { address: string }) {
     });
 
     const handleContribute = async () => {
-        if (!user?.wallet?.address) return;
+        if (!user?.wallet?.address || !amount) return;
         setIsUpdating(true);
         const walletAddress = user.wallet.address as `0x${string}`;
-        const contributeAmount = parseUnits('10', 18); // Default $10 contribution
+        const contributeAmount = parseUnits(amount, 18);
 
         try {
             // Step 1: Check and Approve if needed
@@ -169,7 +202,7 @@ function PotCard({ address }: { address: string }) {
                     address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
                     abi: MockUSDCABI,
                     functionName: 'approve',
-                    args: [address, parseUnits('100', 18)], // Approve $100 for convenience
+                    args: [address, parseUnits('1000', 18)], // Approve $1000 for convenience
                     account: walletAddress,
                     chain: flowEVMTestnet,
                 });
@@ -229,50 +262,58 @@ function PotCard({ address }: { address: string }) {
     const isCreator = user?.wallet?.address && creator && user.wallet.address.toLowerCase() === (creator as string).toLowerCase();
 
     return (
-        <div className="flex flex-col rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden text-neutral-dark">
-            <div className="p-4 flex flex-col gap-4">
+        <div className="flex flex-col rounded-3xl border border-slate-100 bg-white shadow-sm overflow-hidden text-neutral-dark">
+            <div className="p-6 flex flex-col gap-5">
                 <div className="flex justify-between items-start">
-                    <div className="flex gap-3">
-                        <div className="h-12 w-12 rounded-lg bg-background-light flex items-center justify-center text-primary border border-gray-100">
-                            <span className="material-symbols-outlined text-2xl">savings</span>
+                    <div className="flex gap-4">
+                        <div className="h-14 w-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary border border-primary/5">
+                            <span className="material-symbols-outlined text-3xl">savings</span>
                         </div>
                         <div>
-                            <h3 className="text-neutral-dark text-base font-bold">{(name as string) || 'Loading Pot...'}</h3>
-                            <p className="text-neutral-muted text-xs">Target: ${target ? formatUnits(targetVal, 18) : '0'}</p>
+                            <h3 className="text-slate-900 text-lg font-black tracking-tight">{(name as string) || 'Loading Pot...'}</h3>
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Target: ${target ? formatUnits(targetVal, 18) : '0'}</p>
                         </div>
                     </div>
-                    <div className="bg-success-light text-success text-[10px] font-bold px-2 py-1 rounded shadow-sm">
-                        {progress}% Saved
+                </div>
+
+                <div className="space-y-3">
+                    <div className="flex justify-between items-end">
+                        <span className="text-2xl font-black text-slate-900">${current ? formatUnits(currentVal, 18) : '0.00'}</span>
+                        <div className="bg-success/10 text-success text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-tighter">
+                            {progress}% Goal
+                        </div>
+                    </div>
+                    <div className="h-3 w-full rounded-full bg-slate-50 overflow-hidden border border-slate-100">
+                        <div className="h-full bg-primary transition-all duration-1000 ease-out" style={{ width: `${Math.min(progress, 100)}%` }}></div>
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <div className="flex justify-between items-end text-sm text-neutral-dark">
-                        <span className="font-bold">${current ? formatUnits(currentVal, 18) : '0.00'}</span>
-                        <span className="text-neutral-muted text-[10px] uppercase font-bold tracking-tighter">Current Funding</span>
+                <div className="flex flex-col gap-3 pt-2">
+                    <div className="flex gap-2">
+                        <input
+                            type="number"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            className="w-24 bg-slate-50 border border-slate-100 rounded-xl px-3 text-sm font-bold text-slate-900 focus:border-primary outline-none"
+                        />
+                        <button
+                            onClick={handleContribute}
+                            disabled={isUpdating}
+                            className="flex-1 h-12 bg-primary hover:bg-primary/90 text-white rounded-xl font-black transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 shadow-lg shadow-primary/10"
+                        >
+                            <span className="material-symbols-outlined text-sm">{isUpdating ? 'sync' : 'add'}</span>
+                            {isUpdating ? 'Wait...' : 'Contribute'}
+                        </button>
                     </div>
-                    <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                        <div className="h-full bg-primary transition-all duration-700" style={{ width: `${progress}%` }}></div>
-                    </div>
-                </div>
 
-                <div className="flex gap-2 mt-1">
-                    <button
-                        onClick={handleContribute}
-                        disabled={isUpdating}
-                        className="flex-1 h-11 bg-primary hover:bg-primary/90 text-white rounded-lg font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                        <span className="material-symbols-outlined text-sm">{isUpdating ? 'sync' : 'payments'}</span>
-                        {isUpdating ? 'Contributing...' : 'Contribute'}
-                    </button>
-                    {isCreator && (
+                    {isCreator && currentVal >= targetVal && (
                         <button
                             onClick={handleWithdraw}
-                            disabled={isUpdating || currentVal < targetVal}
-                            className="flex-1 h-11 bg-neutral-light hover:bg-neutral-light/80 text-neutral-dark rounded-lg font-bold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                            disabled={isUpdating}
+                            className="h-12 bg-success text-white rounded-xl font-black transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 shadow-lg shadow-success/10"
                         >
-                            <span className="material-symbols-outlined text-sm">account_balance_wallet</span>
-                            Withdraw
+                            <span className="material-symbols-outlined text-sm">check_circle</span>
+                            Claim Savings
                         </button>
                     )}
                 </div>

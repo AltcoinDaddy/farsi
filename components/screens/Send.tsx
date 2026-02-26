@@ -1,41 +1,147 @@
+'use client';
+
+import React from 'react';
 import Link from 'next/link';
-import { ChevronLeft, Send, ArrowUpRight, Search } from 'lucide-react';
+import { ChevronLeft, ArrowUpRight, Search, Wallet } from 'lucide-react';
+import { useWriteContract, useAccount, useReadContract } from 'wagmi';
+import { parseUnits, formatUnits } from 'viem';
+import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+import MockUSDCABI from '@/lib/abi/MockUSDC.json';
+import { flowEVMTestnet, config } from '@/lib/web3-config';
+import { waitForTransactionReceipt } from 'wagmi/actions';
 
 export default function SendScreen() {
+    const { address } = useAccount();
+    const { writeContractAsync } = useWriteContract();
+    const [recipient, setRecipient] = React.useState('');
+    const [amount, setAmount] = React.useState('');
+    const [isUpdating, setIsUpdating] = React.useState(false);
+
+    // Fetch mUSDC balance for display
+    const { data: usdcBalance, refetch: refetchUSDC } = useReadContract({
+        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
+        abi: MockUSDCABI,
+        functionName: 'balanceOf',
+        args: [address],
+    });
+
+    const handleTransfer = async () => {
+        if (!address || !recipient || !amount) return;
+        setIsUpdating(true);
+
+        try {
+            console.log(`Sending ${amount} mUSDC to ${recipient}...`);
+            const transferHash = await writeContractAsync({
+                address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
+                abi: MockUSDCABI,
+                functionName: 'transfer',
+                args: [recipient as `0x${string}`, parseUnits(amount, 18)],
+                account: address as `0x${string}`,
+                chain: flowEVMTestnet,
+            });
+            await waitForTransactionReceipt(config, { hash: transferHash });
+            await refetchUSDC();
+            setAmount('');
+            setRecipient('');
+            console.log('Transfer successful!');
+            alert('Transfer successful!');
+        } catch (error) {
+            console.error('Transfer failed:', error);
+            alert('Transfer failed. Please check the address and your balance.');
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const formattedUSDC = usdcBalance ? parseFloat(formatUnits(usdcBalance as bigint, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
+
     return (
-        <div className="flex flex-col min-h-screen bg-white">
-            <div className="flex items-center p-4 border-b border-[#E0E0E0]">
-                <Link href="/" className="text-[#1A1A1A]">
+        <div className="flex flex-col min-h-screen bg-white text-slate-900">
+            <div className="flex items-center p-4 border-b border-slate-100">
+                <Link href="/" className="text-slate-900 flex size-10 items-center justify-center">
                     <ChevronLeft size={24} />
                 </Link>
-                <h2 className="flex-1 text-center text-lg font-black pr-6">Send Funds</h2>
+                <h2 className="flex-1 text-center text-lg font-black pr-10">Send Funds</h2>
             </div>
 
-            <div className="p-4 space-y-6">
-                <div className="space-y-2">
-                    <label className="text-sm font-black text-[#4A4A4A]">Search Recipient</label>
-                    <div className="flex items-center rounded-2xl border-2 border-[#E0E0E0] bg-[#F8F9FA] p-4">
-                        <Search size={20} className="text-[#4A4A4A] mr-2" />
-                        <input type="text" placeholder="Name, @username, or address" className="bg-transparent flex-1 outline-none font-bold" />
+            <main className="flex-1 p-6 space-y-8">
+                {/* Balance & Amount */}
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center px-1">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Amount to Send</label>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
+                            <Wallet size={12} />
+                            {formattedUSDC} mUSDC
+                        </div>
+                    </div>
+                    <div className="relative">
+                        <input
+                            type="number"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            placeholder="0.00"
+                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[32px] p-8 text-4xl font-black text-slate-900 focus:border-primary outline-none transition-all pr-24"
+                        />
+                        <div className="absolute right-8 top-1/2 -translate-y-1/2 font-black text-slate-400">
+                            USDC
+                        </div>
                     </div>
                 </div>
 
+                {/* Recipient Input */}
                 <div className="space-y-4">
-                    <h3 className="text-sm font-black text-[#4A4A4A] uppercase tracking-widest">Recent</h3>
-                    <div className="space-y-3">
-                        {['@sam', '@lexi', '@flow_fan'].map(name => (
-                            <div key={name} className="flex items-center justify-between p-4 rounded-xl border border-[#E0E0E0] hover:bg-[#F8F9FA] cursor-pointer">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-[#E6F0FA] flex items-center justify-center text-[#4A90E2] font-black">
-                                        {name[1].toUpperCase()}
-                                    </div>
-                                    <span className="font-black text-[#1A1A1A]">{name}</span>
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Recipient Address</label>
+                    <div className="flex items-center rounded-3xl border-2 border-slate-100 bg-slate-50 p-5 focus-within:border-primary transition-all">
+                        <Search size={22} className="text-slate-400 mr-3" />
+                        <input
+                            type="text"
+                            value={recipient}
+                            onChange={(e) => setRecipient(e.target.value)}
+                            placeholder="0x... or ENS name"
+                            className="bg-transparent flex-1 outline-none font-bold text-slate-900 placeholder:text-slate-300"
+                        />
+                    </div>
+                </div>
+
+                {/* Recent Items */}
+                <div className="space-y-4">
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Suggested</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                        {['0x123...', '0xABC...', '0x789...'].map((addr, i) => (
+                            <button
+                                key={i}
+                                onClick={() => setRecipient(addr)}
+                                className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-primary transition-all group"
+                            >
+                                <div className="size-10 rounded-full bg-white flex items-center justify-center text-slate-400 font-black border border-slate-100 group-hover:bg-primary/5 group-hover:text-primary group-hover:border-primary/20">
+                                    {String.fromCharCode(65 + i)}
                                 </div>
-                                <ArrowUpRight size={18} className="text-[#E0E0E0]" />
-                            </div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{addr}</span>
+                            </button>
                         ))}
                     </div>
                 </div>
+            </main>
+
+            {/* Float Action Button */}
+            <div className="p-6 bg-white border-t border-slate-100 sticky bottom-0">
+                <button
+                    onClick={handleTransfer}
+                    disabled={isUpdating || !recipient || !amount || parseFloat(amount) <= 0}
+                    className="w-full bg-primary text-white py-5 rounded-[24px] font-black text-lg shadow-2xl shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+                >
+                    {isUpdating ? (
+                        <>
+                            <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Sending...
+                        </>
+                    ) : (
+                        <>
+                            <ArrowUpRight size={20} />
+                            Send mUSDC
+                        </>
+                    )}
+                </button>
             </div>
         </div>
     );

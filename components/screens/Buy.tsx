@@ -1,124 +1,179 @@
 'use client';
 
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@/lib/mock-privy';
 
 export default function BuyScreen() {
     const router = useRouter();
     const { user } = usePrivy();
+    const [usdAmount, setUsdAmount] = React.useState('100');
+    const [showSimulation, setShowSimulation] = React.useState(false);
+    const [simStep, setSimStep] = React.useState(0);
+
+    const usdcReceived = (parseFloat(usdAmount || '0') * 0.9845).toFixed(2);
+
+    const handleStartPurchase = () => {
+        setShowSimulation(true);
+        setSimStep(1);
+
+        // Simulate Ramp Overlay Flow
+        setTimeout(() => setSimStep(2), 2000); // "Connecting to Ramp..."
+        setTimeout(() => setSimStep(3), 4500); // "Processing Payment..."
+        setTimeout(() => {
+            router.push(`/receipt?amount=${usdcReceived}&type=Bought+USDC`);
+        }, 6500);
+    };
 
     return (
-        <div className="bg-white flex flex-col min-h-full">
+        <div className="bg-white flex flex-col min-h-screen text-slate-900">
             {/* Header */}
             <div className="flex items-center bg-white p-4 pb-2 justify-between border-b border-slate-100">
-                <button onClick={() => router.back()} className="text-neutral-dark flex size-10 shrink-0 items-center justify-center cursor-pointer">
+                <button onClick={() => router.back()} className="text-slate-900 flex size-10 shrink-0 items-center justify-center cursor-pointer hover:bg-slate-50 rounded-full transition-colors">
                     <span className="material-symbols-outlined">arrow_back</span>
                 </button>
-                <h2 className="text-neutral-dark text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-10">Buy Crypto</h2>
+                <h2 className="text-slate-900 text-lg font-black leading-tight tracking-tight flex-1 text-center pr-10">Buy Crypto</h2>
             </div>
 
             {/* Progress Steps */}
-            <div className="flex w-full flex-row items-center justify-center gap-8 py-6">
+            <div className="flex w-full flex-row items-center justify-center gap-8 py-8">
                 <div className="flex flex-col items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">1</div>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">Amount</span>
+                    <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center text-white text-sm font-black shadow-lg shadow-primary/20">1</div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">Amount</span>
                 </div>
-                <div className="h-px w-12 bg-slate-200 mt-[-18px]"></div>
+                <div className="h-1 w-12 bg-slate-100 rounded-full"></div>
                 <div className="flex flex-col items-center gap-2">
-                    <div className="h-8 w-8 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-400 text-sm font-bold">2</div>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Payment</span>
-                </div>
-                <div className="h-px w-12 bg-slate-200 mt-[-18px]"></div>
-                <div className="flex flex-col items-center gap-2">
-                    <div className="h-8 w-8 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-400 text-sm font-bold">3</div>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Confirm</span>
+                    <div className="h-9 w-9 rounded-full border-2 border-slate-100 bg-white flex items-center justify-center text-slate-300 text-sm font-black">2</div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Payment</span>
                 </div>
             </div>
 
             {/* Input Section */}
-            <div className="px-4 py-2 space-y-4">
-                <div className="flex flex-col gap-2">
-                    <label className="text-neutral-muted text-sm font-medium">You pay</label>
-                    <div className="flex w-full items-stretch rounded-xl border border-slate-200 bg-background-light focus-within:border-primary transition-colors">
-                        <input className="flex w-full min-w-0 flex-1 bg-transparent border-none focus:ring-0 p-4 text-xl font-semibold text-neutral-dark" placeholder="0.00" type="number" defaultValue="100" />
-                        <div className="flex items-center gap-2 px-4 border-l border-slate-200">
-                            <span className="text-neutral-dark font-bold">USD</span>
-                            <span className="material-symbols-outlined text-slate-400 text-sm">keyboard_arrow_down</span>
+            <main className="flex-1 px-6 space-y-8">
+                <div className="space-y-4">
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">You pay</label>
+                    <div className="relative group">
+                        <input
+                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[32px] p-8 text-4xl font-black text-slate-900 focus:border-primary outline-none transition-all pr-28 group-hover:border-slate-200"
+                            type="number"
+                            value={usdAmount}
+                            onChange={(e) => setUsdAmount(e.target.value)}
+                            placeholder="0.00"
+                        />
+                        <div className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                            <span className="text-slate-900 font-black tracking-tight">USD</span>
+                            <span className="material-symbols-outlined text-slate-400 text-lg">expand_more</span>
                         </div>
                     </div>
                 </div>
-                <div className="flex justify-center -my-2 relative z-10">
-                    <div className="bg-white p-1 rounded-full border border-slate-100 shadow-sm">
-                        <div className="bg-primary/10 p-2 rounded-full">
-                            <span className="material-symbols-outlined text-primary text-xl">swap_vert</span>
+
+                <div className="flex justify-center -my-4 relative z-10">
+                    <div className="bg-white p-1 rounded-full border border-slate-100 shadow-xl">
+                        <div className="bg-primary/5 p-3 rounded-full text-primary">
+                            <span className="material-symbols-outlined font-black">swap_vert</span>
                         </div>
                     </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-neutral-muted text-sm font-medium">You receive (Estimated)</label>
-                    <div className="flex w-full items-stretch rounded-xl border border-slate-200 bg-background-light focus-within:border-primary transition-colors">
-                        <input className="flex w-full min-w-0 flex-1 bg-transparent border-none focus:ring-0 p-4 text-xl font-semibold text-neutral-dark" readOnly type="number" defaultValue="98.45" />
-                        <div className="flex items-center gap-2 px-4 border-l border-slate-200">
+
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center px-1">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest">You receive</label>
+                        <span className="text-[10px] font-black text-success uppercase tracking-widest flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">bolt</span> Best Rate
+                        </span>
+                    </div>
+                    <div className="relative">
+                        <input
+                            className="w-full bg-slate-100 border-2 border-transparent rounded-[32px] p-8 text-4xl font-black text-slate-400 outline-none pr-32 cursor-default"
+                            readOnly
+                            type="number"
+                            value={usdcReceived}
+                        />
+                        <div className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm">
                             <div className="size-6 rounded-full bg-primary flex items-center justify-center">
-                                <span className="material-symbols-outlined text-white text-[16px]">toll</span>
+                                <span className="material-symbols-outlined text-white text-[14px] material-symbols-filled">toll</span>
                             </div>
-                            <span className="text-neutral-dark font-bold">USDC</span>
-                            <span className="material-symbols-outlined text-slate-400 text-sm">keyboard_arrow_down</span>
+                            <span className="text-slate-900 font-black tracking-tight">USDC</span>
                         </div>
                     </div>
-                    <p className="text-[11px] text-neutral-muted flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]">info</span>
-                        1 USD ≈ 0.9845 USDC. Includes 1.5% fee.
+                    <p className="text-[11px] text-slate-400 font-bold px-1 flex items-center gap-2 italic">
+                        1 USD ≈ 0.9845 USDC • Fee included
                     </p>
                 </div>
 
-                {/* Destination Info */}
-                <div className="bg-background-light rounded-xl p-3 border border-slate-100 flex items-center gap-3">
-                    <div className="size-8 rounded-full bg-white flex items-center justify-center text-primary border border-gray-100">
-                        <span className="material-symbols-outlined text-sm">wallet</span>
+                {/* Destination */}
+                <div className="bg-slate-50 rounded-[24px] p-5 border border-slate-100 flex items-center gap-4">
+                    <div className="size-12 rounded-2xl bg-white flex items-center justify-center text-primary border border-slate-100 shadow-sm">
+                        <span className="material-symbols-outlined text-2xl font-black">account_balance_wallet</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-neutral-muted uppercase font-bold tracking-widest">Destination Address</p>
-                        <p className="text-xs font-mono text-neutral-dark truncate">{user?.wallet?.address}</p>
+                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1">Deposit To</p>
+                        <p className="text-xs font-black text-slate-900 truncate">
+                            {user?.wallet?.address || 'Connecting wallet...'}
+                        </p>
+                    </div>
+                </div>
+            </main>
+
+            {/* Float Action Button */}
+            <div className="p-6 bg-white border-t border-slate-100 sticky bottom-0 z-10">
+                <button
+                    onClick={handleStartPurchase}
+                    disabled={!usdAmount || parseFloat(usdAmount) <= 0}
+                    className="w-full bg-primary text-white py-6 rounded-[28px] font-black text-lg shadow-2xl shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+                >
+                    <span className="material-symbols-outlined">payments</span>
+                    Buy with Card
+                </button>
+                <div className="flex items-center justify-center gap-2 mt-4 opacity-40">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Powered by</span>
+                    <div className="flex items-center gap-1 scale-90">
+                        <span className="material-symbols-outlined text-primary text-sm font-black">bolt</span>
+                        <span className="text-xs font-black text-slate-900 tracking-tight">RAMP</span>
                     </div>
                 </div>
             </div>
 
-            {/* Payment Methods */}
-            <div className="px-4 py-6">
-                <h3 className="text-neutral-dark text-base font-bold mb-4">Payment Method</h3>
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 rounded-xl border-2 border-primary bg-primary/5 cursor-pointer">
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center justify-center text-primary">
-                                <span className="material-symbols-outlined text-3xl">credit_card</span>
+            {/* Ramp Simulation Modal */}
+            {showSimulation && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                    <div className="bg-white w-full max-w-sm rounded-[40px] overflow-hidden shadow-2xl animate-in zoom-in duration-500">
+                        <div className="p-10 flex flex-col items-center text-center space-y-8">
+                            <div className="relative">
+                                <div className="size-24 rounded-full bg-primary/5 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-4xl text-primary animate-pulse">bolt</span>
+                                </div>
+                                <div className="absolute inset-0 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
                             </div>
-                            <div>
-                                <p className="text-neutral-dark font-semibold">Credit/Debit Card</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <img className="h-3 object-contain" alt="Visa Logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArYt3k6r6VPEkKbcMnAdoDD30sedp-X-aKlZGRkKPigP5hOGQ8lXfNXq51zBcDrZxcUY3NwUJ4Nvn8gXieNrnD0hj2dfA3cF5SksB1l7XaSVisgDD7GOZe878lA0JjjlIjnrrmGaPQUhxQNZikcNHZ8yoUxW6-ipEE_MPWV9_krUJVs3HgMzz109dwabOybqPm6x8rapG8VTTvQaum2pFBhfBB7vqTmwmtoJ5V3XnL_WNXMYCg5DtN423cv1ra65WDe3rVHmkux8c" />
-                                    <img className="h-4 object-contain" alt="Mastercard Logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmc2aQzsfX67OWseIrVSqGtnqg2o0PpqAlXivHdgd9GTokMsKU0pvjZrI9-hFW21T1QNUv9gOaVzZihHOd7BfIPrVA1qa56GKzM9X-1QMTTv12xws0JuBc8hIgh81xPRHxSs7c1u5dFKf45CcXxOlUoypYJMmdT2Zwk4MpnVi46UAllFyNJ9KKnrvcrz7c__Ujenqk8T0VfmJHCpb9PRB6yiWSOmQqCqJgNdujvvDPtYtRR886Rpa0TC6kxHOOEYWPF1sLchkEOKU" />
+
+                            <div className="space-y-2">
+                                <h3 className="text-2xl font-black text-slate-900 tracking-tight italic">
+                                    {simStep === 1 && 'Connecting...'}
+                                    {simStep === 2 && 'Verifying Card...'}
+                                    {simStep === 3 && 'Finalizing...'}
+                                </h3>
+                                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">
+                                    {simStep === 1 && 'Securely linking with Ramp'}
+                                    {simStep === 2 && 'Authorizing $100.00 USD'}
+                                    {simStep === 3 && 'Depositing to your wallet'}
+                                </p>
+                            </div>
+
+                            <div className="w-full bg-slate-50 rounded-2xl p-4 flex items-center justify-between border border-slate-100">
+                                <div className="text-left">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Buy Amount</p>
+                                    <p className="text-sm font-black text-slate-900">{usdAmount} USD</p>
+                                </div>
+                                <span className="material-symbols-outlined text-slate-300">chevron_right</span>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Receive</p>
+                                    <p className="text-sm font-black text-slate-900">{usdcReceived} USDC</p>
                                 </div>
                             </div>
                         </div>
-                        <div className="size-5 rounded-full border-4 border-primary bg-white"></div>
                     </div>
                 </div>
-            </div>
-
-            {/* Provider Branding */}
-            <div className="mt-auto px-4 py-8 flex flex-col items-center gap-6 pb-24">
-                <div className="flex items-center gap-2 opacity-60">
-                    <span className="text-[10px] font-medium uppercase tracking-widest text-neutral-muted">Powered by</span>
-                    <div className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-primary text-sm">bolt</span>
-                        <span className="text-xs font-bold text-neutral-dark">Ramp</span>
-                    </div>
-                </div>
-                <button className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-primary/20">
-                    Proceed to Payment
-                </button>
-            </div>
+            )}
         </div>
     );
 }

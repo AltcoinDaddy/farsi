@@ -1,28 +1,65 @@
-#  Farsi: Finance, but for Humans
+# 🇮🇷 Farsi: Financial Empowerment for New Frontiers
 
-**The money app that makes sense.**  
-Farsi is a mobile-first wallet built on [Flow EVM](https://flow.com/evm) that takes the technical headache out of DeFi. We’ve stripped away the jargon and the complexity to give you a premium finance experience that feels just as natural as your favorite banking app—only smarter.
+Farsi is a premium mobile-first Decentralized Finance (DeFi) application built on **Flow EVM**. It simplifies complex blockchain interactions into a natural, high-fidelity experience, enabling users to save, earn, and spend their digital assets effortlessly.
 
-Whether you're looking to earn yield on your savings or pool money with your friends for a weekend trip, Farsi handles the heavy lifting on-chain so you can focus on your goals.
+## 🚀 Live Features
+
+Farsi has successfully transitioned from a prototype to a **fully functional application** integrated with the Flow EVM Testnet:
+
+- **💳 Live Wallet**: Real-time balance fetching for mUSDC and FLOW directly from the blockchain.
+- **📈 Dynamic Earn**: Specify exact amounts to deposit into or withdraw from yield-generating vaults.
+- **👥 Social Pots**: Create custom savings goals with friends, set specific targets, and track progress on-chain.
+- **💸 P2P Transfers**: Send mUSDC to any address with real-time transaction confirmation.
+- **🛍️ Integrated Spend**: Purchase category-based gift cards (Shopping, Travel, Lifestyle) directly with mUSDC.
+- **⚡ Ramp Onramp**: A seamless, high-fidelity gateway to move from fiat to crypto within seconds.
+
+## 🛠️ Tech Stack
+
+- **Blockchain**: Flow EVM (Testnet)
+- **Account Abstraction**: ZeroDev & Privy (Smart Wallets for seamless UX)
+- **Frontend**: Next.js 14, Tailwind CSS, Wagmi, Viem
+- **Smart Contracts**: Solidity (Yield Vaults, Shared Pots, Mock USDC)
+
+## 📦 Getting Started
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/your-repo/farsi.git
+    cd farsi
+    ```
+2.  **Install dependencies**:
+    ```bash
+    npm install --legacy-peer-deps
+    ```
+3.  **Configure environment**:
+    Create a `.env.local` file with your project IDs:
+    ```env
+    NEXT_PUBLIC_WC_PROJECT_ID=...
+    NEXT_PUBLIC_PRIVY_APP_ID=...
+    NEXT_PUBLIC_ZERODEV_PROJECT_ID=...
+    NEXT_PUBLIC_FLOW_RPC=...
+    ```
+4.  **Run locally**:
+    ```bash
+    npm run dev
+    ```
+
+## 📸 Overview
+
+<div align="center">
+  <img src="public/screenshots/dashboard.png" width="32%" alt="Dashboard" />
+  <img src="public/screenshots/earn.png" width="32%" alt="Earn" />
+  <img src="public/screenshots/social.png" width="32%" alt="Social" />
+</div>
+
+<div align="center">
+  <img src="public/screenshots/buy.png" width="32%" alt="Buy Crypto" />
+  <img src="public/screenshots/receipt.png" width="32%" alt="Receipt" />
+  <img src="public/screenshots/receipt-share.png" width="32%" alt="Share Receipt" />
+</div>
 
 ---
-
-## 💡 Why Farsi?
-
-Money is social, but crypto hasn't been. Most DeFi apps feel like they were built for robots—filled with gas fees, seed phrases, and complicated charts. Farsi changes that.
-
-We believe your money should work for *you*, and it should be easy to manage with the people you care about. By building on **Flow**, we’ve created an experience where "gas" isn't a word you'll need to know, and "security" is a given. It’s the stability of the blockchain with the simplicity of a flick of your thumb.
-
----
-
-## 📸 Snapshot of the Experience
-
-| | | |
-|:---:|:---:|:---:|
-| ![Dashboard](screenshots/dashboard.png) | ![Earn](screenshots/earn.png) | ![Social](screenshots/social.png) |
-| **Your Home Base** | **Grow Your Wealth** | **Save with Friends** |
-| ![Buy](screenshots/buy.png) | ![Receipt](screenshots/receipt.png) | ![Share](screenshots/receipt-share.png) |
-| **Get Started Fast** | **Track Every Penny** | **Celebrate Progress** |
+*Built for the Flow Hacker House 2024.*
 
 ---
 
