@@ -25,7 +25,7 @@ export const flowEVMTestnet = {
 
 export const config = getDefaultConfig({
     appName: 'Farsi DeFi',
-    projectId: 'YOUR_PROJECT_ID', // Replace with real WalletConnect ID
+    projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID || 'your-project-id',
     chains: [flowEVMTestnet],
     ssr: true,
 });
