@@ -1,4 +1,4 @@
-# 🇮🇷 Farsi: Finance, but for Humans
+#  Farsi: Finance, but for Humans
 
 **The money app that makes sense.**  
 Farsi is a mobile-first wallet built on [Flow EVM](https://flow.com/evm) that takes the technical headache out of DeFi. We’ve stripped away the jargon and the complexity to give you a premium finance experience that feels just as natural as your favorite banking app—only smarter.
