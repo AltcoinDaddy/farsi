@@ -21,16 +21,13 @@ Farsi bridges the gap by providing a **premium, consumer-grade experience** on t
 ---
 
 ## 📸 Overview
-<div align="center">
-  <img src="screenshots/dashboard.png" width="32%" alt="Dashboard" />
-  <img src="screenshots/earn.png" width="32%" alt="Earn" />
-  <img src="screenshots/social.png" width="32%" alt="Social" />
-</div>
-<div align="center">
-  <img src="screenshots/buy.png" width="32%" alt="Buy Crypto" />
-  <img src="screenshots/receipt.png" width="32%" alt="Receipt" />
-  <img src="screenshots/receipt-share.png" width="32%" alt="Share Receipt" />
-</div>
+
+| | | |
+|:---:|:---:|:---:|
+| ![Dashboard](screenshots/dashboard.png) | ![Earn](screenshots/earn.png) | ![Social](screenshots/social.png) |
+| **Dashboard** | **Earn Yield** | **Social Pots** |
+| ![Buy](screenshots/buy.png) | ![Receipt](screenshots/receipt.png) | ![Share](screenshots/receipt-share.png) |
+| **Buy Crypto** | **Receipts** | **Share & Social** |
 
 ---
 
