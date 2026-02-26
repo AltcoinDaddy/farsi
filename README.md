@@ -1,9 +1,22 @@
 # 🇮🇷 Farsi - Premium Consumer DeFi on Flow EVM
 
 **Simple. Social. Yield-Bearing.**  
-Farsi is a mobile-first, non-custodial finance application designed to bring the power of Decentralized Finance (DeFi) to everyday users through the high-performance [Flow EVM](https://flow.com/evm) network.
+Farsi is a mobile-first, non-custodial finance application built to bring the power of Decentralized Finance (DeFi) to the next billion users through the high-performance [Flow EVM](https://flow.com/evm) network.
 
 Built for the **PL Genesis Hackathon**, Farsi reimagines how users interact with their money—removing crypto complexity while retaining the security of self-custody.
+
+---
+
+## 💡 The "Why" behind Farsi
+
+### The Problem
+Most DeFi applications today are built for "crypto natives"—they are clunky, require complex gas management, and lack the social connection that makes traditional money meaningful. This keeps mainstream users from accessing high-yield opportunities and transparent financial tools.
+
+### The Solution: Farsi
+Farsi bridges the gap by providing a **premium, consumer-grade experience** on top of enterprise-grade smart contracts. By leveraging **Flow EVM**, we offer:
+- **Zero Friction**: Sponsored transactions mean users don't need to hold FLOW just to move their money.
+- **Consumer Familiarity**: Features like "Social Pots" feel like modern banking apps (Splitwise/Venmo), not technical smart contracts.
+- **Institutional Quality**: ERC-4626 vault standards ensure industry-leading security for user yield.
 
 ---
 
