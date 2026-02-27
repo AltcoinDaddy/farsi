@@ -10,6 +10,7 @@ import { formatUnits, parseUnits } from 'viem';
 import { useRouter } from 'next/navigation';
 import { flowEVMTestnet, config } from '@/lib/web3-config';
 import { waitForTransactionReceipt } from 'wagmi/actions';
+import { toast } from 'sonner';
 
 export default function EarnScreen() {
     const router = useRouter();
@@ -67,9 +68,14 @@ export default function EarnScreen() {
             });
             await waitForTransactionReceipt(config, { hash: mintHash });
             await refetchUSDC();
-            console.log('Minted successful!');
+            toast.success('Test funds received!', {
+                description: '1,000 mUSDC has been added to your wallet.',
+            });
         } catch (error) {
             console.error('Faucet failed:', error);
+            toast.error('Faucet failed', {
+                description: 'Please try again later or check your network.',
+            });
         } finally {
             setIsUpdating(false);
         }
@@ -95,9 +101,14 @@ export default function EarnScreen() {
             });
             await waitForTransactionReceipt(config, { hash: withdrawHash });
             await Promise.all([refetchVault(), refetchUSDC(), refetchAllowance()]);
-            console.log('Withdrawal successful!');
+            toast.success('Withdrawal complete', {
+                description: `${amount} mUSDC has been returned to your wallet.`,
+            });
         } catch (error) {
             console.error('Withdraw failed:', error);
+            toast.error('Withdrawal failed', {
+                description: 'Insufficient vault balance or transaction rejected.',
+            });
         } finally {
             setIsUpdating(false);
         }
@@ -145,9 +156,14 @@ export default function EarnScreen() {
 
             // Final refresh
             await Promise.all([refetchUSDC(), refetchVault()]);
-            console.log('Deposit successful!');
+            toast.success('Deposit successful!', {
+                description: `Successfully saved ${amount} mUSDC in the vault.`,
+            });
         } catch (error) {
             console.error('Deposit flow failed:', error);
+            toast.error('Deposit failed', {
+                description: 'Please ensure you have enough balance and try again.',
+            });
         } finally {
             setIsUpdating(false);
         }

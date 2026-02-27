@@ -10,6 +10,7 @@ import { formatUnits, parseUnits } from 'viem';
 import { flowEVMTestnet, config } from '@/lib/web3-config';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { usePrivy } from '@/lib/mock-privy';
+import { toast } from 'sonner';
 
 export default function SocialScreen() {
     const { user } = usePrivy();
@@ -45,9 +46,14 @@ export default function SocialScreen() {
             await refetchPots();
             setShowModal(false);
             setPotName('');
-            console.log('Pot created!');
+            toast.success('Social Pot created!', {
+                description: `Successfully started "${potName}" with a $${potTarget} goal.`,
+            });
         } catch (error) {
             console.error('Create pot failed:', error);
+            toast.error('Failed to create pot', {
+                description: 'Please ensure you have enough funds and try again.',
+            });
         } finally {
             setIsUpdating(false);
         }
@@ -105,7 +111,7 @@ export default function SocialScreen() {
                     <div className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
                         <div className="p-8 space-y-6">
                             <div className="flex justify-between items-center">
-                                <h2 className="text-2xl font-black text-slate-900tracking-tight">New Pot</h2>
+                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">New Pot</h2>
                                 <button onClick={() => setShowModal(false)} className="text-slate-400">
                                     <span className="material-symbols-outlined">close</span>
                                 </button>
@@ -224,9 +230,14 @@ function PotCard({ address }: { address: string }) {
 
             // Final refresh
             await refetchCurrent();
-            console.log('Contribution successful!');
+            toast.success('Contribution sent!', {
+                description: `Successfully added ${amount} mUSDC to the pot.`,
+            });
         } catch (error) {
             console.error('Contribution flow failed:', error);
+            toast.error('Contribution failed', {
+                description: 'Please check your balance and try again.',
+            });
         } finally {
             setIsUpdating(false);
         }
@@ -248,9 +259,14 @@ function PotCard({ address }: { address: string }) {
             });
             await waitForTransactionReceipt(config, { hash: withdrawHash });
             await refetchCurrent();
-            console.log('Withdrawal successful!');
+            toast.success('Funds claimed!', {
+                description: 'The pot savings have been transferred to your wallet.',
+            });
         } catch (error) {
             console.error('Withdraw failed:', error);
+            toast.error('Claim failed', {
+                description: 'You may not have the authority to claim this pot yet.',
+            });
         } finally {
             setIsUpdating(false);
         }

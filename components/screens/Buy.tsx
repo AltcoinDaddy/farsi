@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@/lib/mock-privy';
+import { toast } from 'sonner';
 
 export default function BuyScreen() {
     const router = useRouter();
@@ -21,6 +22,9 @@ export default function BuyScreen() {
         setTimeout(() => setSimStep(2), 2000); // "Connecting to Ramp..."
         setTimeout(() => setSimStep(3), 4500); // "Processing Payment..."
         setTimeout(() => {
+            toast.success('USDC Received!', {
+                description: `${usdcReceived} USDC has been deposited to your wallet.`,
+            });
             router.push(`/receipt?amount=${usdcReceived}&type=Bought+USDC`);
         }, 6500);
     };

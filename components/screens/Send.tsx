@@ -9,6 +9,7 @@ import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
 import { flowEVMTestnet, config } from '@/lib/web3-config';
 import { waitForTransactionReceipt } from 'wagmi/actions';
+import { toast } from 'sonner';
 
 export default function SendScreen() {
     const { address } = useAccount();
@@ -41,13 +42,16 @@ export default function SendScreen() {
             });
             await waitForTransactionReceipt(config, { hash: transferHash });
             await refetchUSDC();
+            toast.success('Funds sent!', {
+                description: `Successfully sent ${amount} mUSDC to ${recipient.slice(0, 6)}...${recipient.slice(-4)}`,
+            });
             setAmount('');
             setRecipient('');
-            console.log('Transfer successful!');
-            alert('Transfer successful!');
         } catch (error) {
             console.error('Transfer failed:', error);
-            alert('Transfer failed. Please check the address and your balance.');
+            toast.error('Transfer failed', {
+                description: 'Check the recipient address and your balance.',
+            });
         } finally {
             setIsUpdating(false);
         }

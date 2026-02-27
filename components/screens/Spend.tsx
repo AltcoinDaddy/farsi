@@ -10,6 +10,7 @@ import MockUSDCABI from '@/lib/abi/MockUSDC.json';
 import { flowEVMTestnet, config } from '@/lib/web3-config';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function SpendScreen() {
     const router = useRouter();
@@ -45,11 +46,17 @@ export default function SpendScreen() {
             await waitForTransactionReceipt(config, { hash: buyHash });
             await refetchUSDC();
 
+            toast.success('Purchase successful!', {
+                description: `Your ${category} gift card is ready.`,
+            });
+
             // Redirect to receipt
             router.push(`/receipt?amount=${amount}&type=${encodeURIComponent(category + ' Gift Card')}`);
         } catch (error) {
             console.error('Purchase failed:', error);
-            alert('Purchase failed. Please check your balance.');
+            toast.error('Purchase failed', {
+                description: 'Please check your balance and try again.',
+            });
         } finally {
             setIsUpdating(false);
         }

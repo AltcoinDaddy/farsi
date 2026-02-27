@@ -1,13 +1,19 @@
 'use client';
 
-import { Search, ArrowUpRight, ArrowDownLeft, Filter, ChevronRight, Wallet as WalletIcon, History } from 'lucide-react';
+import React from 'react';
+import { ArrowUpRight, ArrowDownLeft, Wallet as WalletIcon, History, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import { useAccount, useBalance } from 'wagmi';
-import { formatUnits } from 'viem';
-import { CONTRACT_ADDRESSES } from '@/lib/web3-config';
+import { useAccount, useBalance, usePublicClient } from 'wagmi';
+import { formatUnits, parseAbiItem } from 'viem';
+import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+
+const TRANSFER_EVENT = parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)');
 
 export default function WalletScreen() {
     const { address } = useAccount();
+    const publicClient = usePublicClient();
+    const [transactions, setTransactions] = React.useState<any[]>([]);
+    const [isLoadingHistory, setIsLoadingHistory] = React.useState(false);
 
     // Fetch FLOW balance
     const { data: flowBalance } = useBalance({
@@ -17,8 +23,46 @@ export default function WalletScreen() {
     // Fetch mUSDC balance
     const { data: usdcBalance } = useBalance({
         address,
-        token: CONTRACT_ADDRESSES.MUSDC as `0x${string}`,
+        token: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
     });
+
+    // Fetch recent mUSDC transfers
+    React.useEffect(() => {
+        if (!address || !publicClient) return;
+
+        const fetchLogs = async () => {
+            setIsLoadingHistory(true);
+            try {
+                // Fetch outgoing transfers
+                const sentLogs = await publicClient.getLogs({
+                    address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
+                    event: TRANSFER_EVENT,
+                    args: { from: address },
+                    fromBlock: 'earliest', // In production, limit this to last N blocks
+                });
+
+                // Fetch incoming transfers
+                const receivedLogs = await publicClient.getLogs({
+                    address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
+                    event: TRANSFER_EVENT,
+                    args: { to: address },
+                    fromBlock: 'earliest',
+                });
+
+                const allLogs = [...sentLogs, ...receivedLogs]
+                    .sort((a, b) => Number((b.blockNumber || 0n) - (a.blockNumber || 0n)))
+                    .slice(0, 10); // Last 10 txs
+
+                setTransactions(allLogs);
+            } catch (err) {
+                console.error('Failed to fetch transaction history:', err);
+            } finally {
+                setIsLoadingHistory(false);
+            }
+        };
+
+        fetchLogs();
+    }, [address, publicClient]);
 
     const assets = [
         {
@@ -44,88 +88,128 @@ export default function WalletScreen() {
         (flowBalance ? parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)) * 0.76 : 0)
     ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-    const transactions = [
-        { type: 'Activity', amount: 'Check Explorer', from: 'On-chain', date: 'Real-time', status: 'confirmed' },
-    ];
-
     return (
-        <div className="flex flex-col min-h-screen bg-[#F8F9FA]">
+        <div className="flex flex-col min-h-screen bg-[#F8F9FA] text-slate-900">
             {/* Header */}
             <header className="bg-white px-4 py-6 border-b border-slate-100 sticky top-0 z-10">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">My Assets</h1>
+                    <h1 className="text-2xl font-black tracking-tight text-slate-900">My Assets</h1>
                     <div className="size-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
                         <WalletIcon size={20} />
                     </div>
                 </div>
 
                 {/* Total Balance Mini */}
-                <div className="bg-[#1A1A1A] rounded-2xl p-4 text-white flex justify-between items-center shadow-lg">
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-1">Total Estimated Value</p>
-                        <h2 className="text-xl font-bold">${totalValue}</h2>
+                <div className="bg-[#1A1A1A] rounded-[24px] p-6 text-white flex justify-between items-center shadow-xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <WalletIcon size={80} />
                     </div>
-                    <div className="flex gap-2">
-                        <Link href="/send" className="size-9 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-colors">
-                            <ArrowUpRight size={18} />
+                    <div className="relative z-10">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-1">Total Estimated Value</p>
+                        <h2 className="text-2xl font-black">${totalValue}</h2>
+                    </div>
+                    <div className="flex gap-2 relative z-10">
+                        <Link href="/send" className="size-10 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-all active:scale-90">
+                            <ArrowUpRight size={20} />
                         </Link>
-                        <Link href="/buy" className="size-9 bg-white/10 rounded-xl flex items-center justify-center hover:bg-white/20 transition-colors">
-                            <ArrowDownLeft size={18} />
+                        <Link href="/buy" className="size-10 bg-primary/80 rounded-xl flex items-center justify-center hover:bg-primary transition-all active:scale-90 shadow-lg shadow-primary/20">
+                            <ArrowDownLeft size={20} />
                         </Link>
                     </div>
                 </div>
             </header>
 
-            <main className="flex-1 p-4 space-y-8 pb-24">
+            <main className="flex-1 p-6 space-y-10 pb-24">
                 {/* Token List */}
                 <section>
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Tokens</h3>
-                        <button className="text-[11px] font-bold text-[#4A90E2]">Manage List</button>
+                    <div className="flex justify-between items-center mb-6 px-1">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Your Holdings</h3>
                     </div>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {assets.map((asset) => (
-                            <div key={asset.symbol} className="bg-white rounded-2xl p-4 border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer shadow-sm">
+                            <div key={asset.symbol} className="bg-white rounded-3xl p-5 border border-slate-100 flex items-center justify-between hover:bg-slate-50 transition-all cursor-pointer shadow-sm active:scale-[0.98]">
                                 <div className="flex items-center gap-4">
-                                    <div className={`size-10 rounded-full ${asset.color} flex items-center justify-center text-white font-bold`}>
+                                    <div className={`size-12 rounded-2xl ${asset.color} flex items-center justify-center text-white font-black text-lg border-2 border-white shadow-sm`}>
                                         {asset.icon}
                                     </div>
                                     <div>
-                                        <p className="font-bold text-slate-900">{asset.name}</p>
-                                        <p className="text-xs text-slate-500">{asset.balance} {asset.symbol}</p>
+                                        <p className="font-black text-slate-900 tracking-tight">{asset.name}</p>
+                                        <p className="text-xs font-bold text-slate-400">{asset.balance} {asset.symbol}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-bold text-slate-900">{asset.value}</p>
-                                    <p className="text-[10px] text-[#27AE60] font-bold">Live</p>
+                                    <p className="font-black text-slate-900 tracking-tight">{asset.value}</p>
+                                    <div className="flex items-center justify-end gap-1">
+                                        <span className="size-1.5 rounded-full bg-success"></span>
+                                        <span className="text-[9px] text-success font-black uppercase tracking-tighter">Live</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </section>
 
-                {/* History Link */}
+                {/* Activity List */}
                 <section>
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            <History size={14} /> Recent Activity
+                    <div className="flex justify-between items-center mb-6 px-1">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none flex items-center gap-2">
+                            <History size={12} /> Recent Activity
                         </h3>
+                        <a
+                            href={`https://evm-testnet.flowscan.io/address/${address}`}
+                            target="_blank"
+                            className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1 hover:underline"
+                        >
+                            View All <ExternalLink size={10} />
+                        </a>
                     </div>
 
-                    <a
-                        href={`https://evm-testnet.flowscan.io/address/${address}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm p-6 flex flex-col items-center justify-center gap-3 group hover:bg-slate-50 transition-colors"
-                    >
-                        <div className="size-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform">
-                            <Search size={24} />
-                        </div>
-                        <div className="text-center">
-                            <p className="text-sm font-bold text-slate-900">View on Explorer</p>
-                            <p className="text-[10px] text-slate-500">Check full transaction history on Flowscan</p>
-                        </div>
-                    </a>
+                    <div className="space-y-1">
+                        {isLoadingHistory ? (
+                            <div className="py-10 flex flex-col items-center gap-3">
+                                <div className="size-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Syncing events...</p>
+                            </div>
+                        ) : transactions.length === 0 ? (
+                            <div className="bg-slate-50 border border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center gap-4 text-center">
+                                <History size={32} className="text-slate-300" />
+                                <div>
+                                    <p className="text-sm font-black text-slate-900 tracking-tight">No events found</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-8 mt-1">Transactions will appear here once confirmed</p>
+                                </div>
+                            </div>
+                        ) : (
+                            transactions.map((tx, i) => {
+                                const isOutgoing = tx.args.from.toLowerCase() === address?.toLowerCase();
+                                const counterpart = isOutgoing ? tx.args.to : tx.args.from;
+                                const amount = formatUnits(tx.args.value, 18);
+
+                                return (
+                                    <div key={i} className="flex items-center justify-between p-4 bg-white hover:bg-slate-50 rounded-2xl transition-all border border-transparent hover:border-slate-100 group">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`size-10 rounded-full flex items-center justify-center ${isOutgoing ? 'bg-amber-50 text-amber-600' : 'bg-success/10 text-success'} transition-colors`}>
+                                                {isOutgoing ? <ArrowUpRight size={18} /> : <ArrowDownLeft size={18} />}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-slate-900 tracking-tight">
+                                                    {isOutgoing ? 'Payment Sent' : 'Payment Received'}
+                                                </p>
+                                                <p className="text-[10px] font-bold text-slate-400 truncate w-32">
+                                                    {counterpart.slice(0, 6)}...{counterpart.slice(-4)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={`text-sm font-black ${isOutgoing ? 'text-slate-900' : 'text-success'}`}>
+                                                {isOutgoing ? '-' : '+'}{parseFloat(amount).toFixed(2)}
+                                            </p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">USDC</p>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
                 </section>
             </main>
         </div>
