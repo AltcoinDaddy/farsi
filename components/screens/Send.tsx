@@ -107,22 +107,13 @@ export default function SendScreen() {
                     </div>
                 </div>
 
-                {/* Recent Items */}
+                {/* Recent Items Placeholder */}
                 <div className="space-y-4">
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Suggested</h3>
-                    <div className="grid grid-cols-3 gap-2">
-                        {['0x123...', '0xABC...', '0x789...'].map((addr, i) => (
-                            <button
-                                key={i}
-                                onClick={() => setRecipient(addr)}
-                                className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-primary transition-all group"
-                            >
-                                <div className="size-10 rounded-full bg-white flex items-center justify-center text-slate-400 font-black border border-slate-100 group-hover:bg-primary/5 group-hover:text-primary group-hover:border-primary/20">
-                                    {String.fromCharCode(65 + i)}
-                                </div>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{addr}</span>
-                            </button>
-                        ))}
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Tip</h3>
+                    <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
+                        <p className="text-[11px] text-slate-500 font-bold leading-relaxed">
+                            Paste a Flow EVM address above to send mUSDC instantly. Your recently used addresses will appear here in the next update.
+                        </p>
                     </div>
                 </div>
             </main>

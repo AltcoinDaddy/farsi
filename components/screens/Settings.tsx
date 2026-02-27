@@ -2,13 +2,26 @@
 
 import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Moon, Lock } from 'lucide-react';
 import Link from 'next/link';
+import { usePrivy } from '@/lib/mock-privy';
+import { useRouter } from 'next/navigation';
 
 export default function SettingsScreen() {
+    const { user, logout } = usePrivy();
+    const router = useRouter();
+    const userEmail = user?.email?.address || 'No email linked';
+    const userName = userEmail.split('@')[0] || 'User';
+    const userWallet = user?.wallet?.address || 'No wallet connected';
+
+    const handleLogout = async () => {
+        await logout();
+        router.push('/onboarding');
+    };
+
     const settingsGroups = [
         {
             title: 'Account',
             items: [
-                { icon: User, label: 'Profile Information', detail: 'Sarah Williams', color: 'text-blue-500', bg: 'bg-blue-50' },
+                { icon: User, label: 'Profile Information', detail: userName, color: 'text-blue-500', bg: 'bg-blue-50' },
                 { icon: Shield, label: 'Security & Privacy', detail: '2FA Enabled', color: 'text-green-500', bg: 'bg-green-50' },
             ]
         },
@@ -40,15 +53,12 @@ export default function SettingsScreen() {
                 {/* Profile Snapshot */}
                 <div className="bg-white rounded-3xl p-6 border border-slate-100 flex items-center gap-4 shadow-sm">
                     <div className="size-16 rounded-full bg-slate-200 overflow-hidden">
-                        <img src="https://ui-avatars.com/api/?name=Sarah+Williams&background=4A90E2&color=fff" alt="Profile" />
+                        <img src={`https://ui-avatars.com/api/?name=${userName}&background=4A90E2&color=fff`} alt="Profile" />
                     </div>
-                    <div>
-                        <h2 className="text-lg font-bold text-slate-900">Sarah Williams</h2>
-                        <p className="text-xs text-slate-500 font-medium tracking-tight">sarah.w@example.com</p>
+                    <div className="min-w-0 flex-1">
+                        <h2 className="text-lg font-bold text-slate-900 capitalize">{userName}</h2>
+                        <p className="text-xs text-slate-500 font-medium tracking-tight truncate">{userEmail}</p>
                     </div>
-                    <button className="ml-auto size-10 rounded-xl bg-slate-50 flex items-center justify-center text-[#4A90E2]">
-                        <ChevronRight size={20} />
-                    </button>
                 </div>
 
                 {/* Settings Items */}
@@ -75,7 +85,10 @@ export default function SettingsScreen() {
                 ))}
 
                 {/* Logout */}
-                <button className="w-full p-4 rounded-2xl border-2 border-red-50/50 text-red-500 font-bold text-sm bg-red-50/20 hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
+                <button
+                    onClick={handleLogout}
+                    className="w-full p-4 rounded-2xl border-2 border-red-50/50 text-red-500 font-bold text-sm bg-red-50/20 hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+                >
                     <LogOut size={18} /> Disconnect Wallet
                 </button>
 

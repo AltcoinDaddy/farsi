@@ -108,7 +108,7 @@ export default function SpendScreen() {
                             <div className="space-y-0.5">
                                 <p className="text-[8px] font-black uppercase opacity-40">Card Holder</p>
                                 <p className="text-xs font-bold uppercase tracking-widest">
-                                    {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Demo Account'}
+                                    {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Smart Account'}
                                 </p>
                             </div>
                             <div className="flex flex-col items-end">

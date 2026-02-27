@@ -3,7 +3,14 @@
 import { usePrivy } from '@/lib/mock-privy';
 import { useBalance } from 'wagmi';
 import Link from 'next/link';
-import { formatUnits } from 'viem';
+import { formatUnits, parseAbiItem } from 'viem';
+import { usePublicClient, useReadContract } from 'wagmi';
+import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+import YieldVaultABI from '@/lib/abi/YieldVault.json';
+import { ArrowUpRight, ArrowDownLeft, PersonStanding, History } from 'lucide-react';
+import React from 'react';
+
+const TRANSFER_EVENT = parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)');
 
 export default function DashboardPage() {
     const { user } = usePrivy();
@@ -12,7 +19,53 @@ export default function DashboardPage() {
     });
 
     const displayName = user?.email?.address?.split('@')[0] || 'User';
+    const publicClient = usePublicClient();
+    const [transactions, setTransactions] = React.useState<any[]>([]);
+    const [isHistoryLoading, setIsHistoryLoading] = React.useState(false);
+
+    // Fetch Vault shares balance to see if they HAVE yield
+    const { data: vaultBalance } = useReadContract({
+        address: CONTRACT_ADDRESSES.YieldVault as `0x${string}`,
+        abi: YieldVaultABI,
+        functionName: 'balanceOf',
+        args: [user?.wallet?.address],
+    });
+
+    // Fetch recent mUSDC transfers (same logic as Wallet.tsx)
+    React.useEffect(() => {
+        if (!user?.wallet?.address || !publicClient) return;
+        const address = user.wallet.address as `0x${string}`;
+
+        const fetchLogs = async () => {
+            setIsHistoryLoading(true);
+            try {
+                const sentLogs = await publicClient.getLogs({
+                    address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
+                    event: TRANSFER_EVENT,
+                    args: { from: address },
+                    fromBlock: 'earliest',
+                });
+                const receivedLogs = await publicClient.getLogs({
+                    address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
+                    event: TRANSFER_EVENT,
+                    args: { to: address },
+                    fromBlock: 'earliest',
+                });
+                const allLogs = [...sentLogs, ...receivedLogs]
+                    .sort((a, b) => Number((b.blockNumber || 0n) - (a.blockNumber || 0n)))
+                    .slice(0, 3); // Just show top 3 on dashboard
+                setTransactions(allLogs);
+            } catch (err) {
+                console.error('Failed to fetch dashboard history:', err);
+            } finally {
+                setIsHistoryLoading(false);
+            }
+        };
+        fetchLogs();
+    }, [user?.wallet?.address, publicClient]);
+
     const formattedBalance = balance ? parseFloat(formatUnits(balance.value, balance.decimals)).toFixed(2) : '0.00';
+    const hasYield = vaultBalance && (vaultBalance as bigint) > 0n;
 
     return (
         <div className="bg-background-light text-neutral-dark min-h-screen flex flex-col">
@@ -75,17 +128,21 @@ export default function DashboardPage() {
 
                 {/* Yield Banner */}
                 <div className="px-4 mb-6">
-                    <Link href="/earn" className="bg-[#D4F4E2] border border-[#27AE60]/20 rounded-lg p-4 flex items-center justify-between">
+                    <Link href="/earn" className={`${hasYield ? 'bg-[#D4F4E2] border-[#27AE60]/20' : 'bg-blue-50 border-blue-100'} border rounded-lg p-4 flex items-center justify-between transition-all`}>
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#27AE60] shadow-sm">
-                                <span className="material-symbols-outlined">payments</span>
+                            <div className={`w-10 h-10 bg-white rounded-full flex items-center justify-center ${hasYield ? 'text-[#27AE60]' : 'text-primary'} shadow-sm`}>
+                                <span className="material-symbols-outlined">{hasYield ? 'account_balance' : 'rocket_launch'}</span>
                             </div>
                             <div>
-                                <p className="text-[#27AE60] font-bold text-sm leading-tight">You earned $0.45 today!</p>
-                                <p className="text-[#27AE60]/80 text-xs">Your yield is working for you.</p>
+                                <p className={`${hasYield ? 'text-[#27AE60]' : 'text-primary'} font-bold text-sm leading-tight`}>
+                                    {hasYield ? 'Your yield is growing!' : 'Start Earning Yield'}
+                                </p>
+                                <p className={`${hasYield ? 'text-[#27AE60]/80' : 'text-primary/70'} text-xs`}>
+                                    {hasYield ? 'Vault assets are working for you.' : 'Put your idle mUSDC to work.'}
+                                </p>
                             </div>
                         </div>
-                        <span className="material-symbols-outlined text-[#27AE60]">chevron_right</span>
+                        <span className={`material-symbols-outlined ${hasYield ? 'text-[#27AE60]' : 'text-primary'}`}>chevron_right</span>
                     </Link>
                 </div>
 
@@ -122,35 +179,43 @@ export default function DashboardPage() {
 
                 {/* Recent Transactions */}
                 <div className="px-4">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-bold text-[#4A4A4A] uppercase tracking-wider">Recent Activity</h3>
-                        <button className="text-xs font-bold text-[#4A90E2]">View All</button>
+                    <div className="flex items-center justify-between mb-4 px-1">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Recent Activity</h3>
+                        <Link href="/wallet" className="text-[10px] font-black text-primary uppercase tracking-widest">View All</Link>
                     </div>
                     <div className="space-y-3">
-                        <div className="bg-white p-3 rounded-lg border border-gray-100 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-[#E6F0FA] flex items-center justify-center text-[#4A90E2]">
-                                    <span className="material-symbols-outlined text-xl">person</span>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-[#1A1A1A]">Sent to @sam</p>
-                                    <p className="text-[10px] text-[#4A4A4A]">Today, 2:45 PM</p>
-                                </div>
+                        {isHistoryLoading ? (
+                            <div className="py-8 flex flex-col items-center gap-2">
+                                <div className="size-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Syncing...</p>
                             </div>
-                            <p className="text-sm font-bold text-[#1A1A1A]">-$25.00</p>
-                        </div>
-                        <div className="bg-white p-3 rounded-lg border border-gray-100 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-[#D4F4E2] flex items-center justify-center text-[#27AE60]">
-                                    <span className="material-symbols-outlined text-xl">savings</span>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-[#1A1A1A]">Earned Yield</p>
-                                    <p className="text-[10px] text-[#4A4A4A]">Today, 8:00 AM</p>
-                                </div>
+                        ) : transactions.length === 0 ? (
+                            <div className="bg-white p-6 rounded-2xl border border-dashed border-slate-200 flex flex-col items-center text-center gap-2">
+                                <History size={24} className="text-slate-200" />
+                                <p className="text-xs font-bold text-slate-400">No recent activity</p>
                             </div>
-                            <p className="text-sm font-bold text-[#27AE60]">+$0.45</p>
-                        </div>
+                        ) : (
+                            transactions.map((tx, i) => {
+                                const isOutgoing = tx.args.from.toLowerCase() === user?.wallet?.address?.toLowerCase();
+                                const amount = formatUnits(tx.args.value, 18);
+                                return (
+                                    <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isOutgoing ? 'bg-amber-50 text-amber-600' : 'bg-success/10 text-success'}`}>
+                                                {isOutgoing ? <ArrowUpRight size={18} /> : <ArrowDownLeft size={18} />}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-[#1A1A1A]">{isOutgoing ? 'Sent mUSDC' : 'Received mUSDC'}</p>
+                                                <p className="text-[10px] text-neutral-muted uppercase font-bold tracking-tight">Confirmed</p>
+                                            </div>
+                                        </div>
+                                        <p className={`text-sm font-black ${isOutgoing ? 'text-slate-900' : 'text-success'}`}>
+                                            {isOutgoing ? '-' : '+'}{parseFloat(amount).toFixed(2)}
+                                        </p>
+                                    </div>
+                                );
+                            })
+                        )}
                     </div>
                 </div>
             </main>
