@@ -23,13 +23,13 @@ Stay on top of your assets. Our real-time wallet pulls directly from the **Flow 
 ###  **Smart Earn**
 Don't let your money sit idle. Farsi Earn connects you to yield-generating vaults. Deposit your mUSDC with a tap, watch it grow through the **ERC-4626 standard**, and withdraw whenever you want. No lock-ups, no hidden catches.
 
-### 🤝 **Social Pots (Save with Friends)**
+###  **Social Pots (Save with Friends)**
 Project savings, group gifts, or trip funds—on-chain. Create a "Social Pot," set a goal, and invite friends to contribute. It’s transparent, social, and the money is only accessible once the group hits the target.
 
-### 💸 **Global Send**
+###  **Global Send**
 Seamless P2P transfers. Send mUSDC to anyone on Flow instantly. With **sponsored transactions**, the fees are on us. You just click and go.
 
-### 🛍️ **Integrated Spend**
+###  **Integrated Spend**
 The "closed loop" of DeFi. Use your mUSDC to purchase gift cards for **Shopping, Travel, and Lifestyle**. Get a dynamic digital receipt for every purchase and spend your digital earnings in the real world.
 
 ---
@@ -57,7 +57,7 @@ We’ve hidden the complexity of blockchain behind a premium interface:
 
 ---
 
-## 🚀 Jump In
+##  Jump In
 
 ### 1. Requirements
 You'll need a few project IDs for the full experience:
@@ -88,11 +88,11 @@ npm run dev
 
 ---
 
-## 🏁 How to Demo
+## How to Demo
 1. **Get Funded**: Head to the **Earn** screen and tap the "Get 1000" button to get your test mUSDC.
 2. **Grow**: Deposit some funds into the vault to see your yield working.
 3. **Socialize**: Create a Social Pot for a "Summer Trip" and try contributing.
 4. **Spend**: Buy a Gift Card in the Spend screen and view your dynamic receipt!
 
 ---
-*Built for the Flow Hacker House 🏆*
+
