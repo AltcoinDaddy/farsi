@@ -8,6 +8,7 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  transpilePackages: ['lucide-react', '@privy-io/react-auth'],
   typescript: {
     ignoreBuildErrors: true, // For demo purposes
   }

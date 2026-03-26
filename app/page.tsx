@@ -1,21 +1,30 @@
 'use client';
 
-import { usePrivy } from '@/lib/mock-privy';
+import { usePrivy } from '@privy-io/react-auth';
 import { useBalance } from 'wagmi';
 import Link from 'next/link';
 import { formatUnits, parseAbiItem } from 'viem';
-import { usePublicClient, useReadContract } from 'wagmi';
+import { usePublicClient, useReadContract, useAccount } from 'wagmi';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import YieldVaultABI from '@/lib/abi/YieldVault.json';
-import { ArrowUpRight, ArrowDownLeft, PersonStanding, History } from 'lucide-react';
+import MockUSDCABI from '@/lib/abi/MockUSDC.json';
+import { ArrowUpRight, ArrowDownLeft, History, Wallet, Sparkles, TrendingUp } from 'lucide-react';
 import React from 'react';
+import { toast } from 'sonner';
 
 const TRANSFER_EVENT = parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)');
 
+import { QRCodeSVG } from 'qrcode.react';
+
 export default function DashboardPage() {
     const { user } = usePrivy();
+    const { address: wagmiAddress } = useAccount();
+    const address = (user?.wallet?.address || wagmiAddress) as `0x${string}`;
+    const [showReceiveModal, setShowReceiveModal] = React.useState(false);
+    const [flowPrice, setFlowPrice] = React.useState<number | null>(null);
+
     const { data: balance, isLoading: isBalanceLoading } = useBalance({
-        address: user?.wallet?.address as `0x${string}`,
+        address: address,
     });
 
     const displayName = user?.email?.address?.split('@')[0] || 'User';
@@ -23,18 +32,41 @@ export default function DashboardPage() {
     const [transactions, setTransactions] = React.useState<any[]>([]);
     const [isHistoryLoading, setIsHistoryLoading] = React.useState(false);
 
+    // Fetch FLOW price from CoinGecko
+    React.useEffect(() => {
+        const fetchPrice = async () => {
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=flow&vs_currencies=usd');
+                const data = await res.json();
+                setFlowPrice(data.flow.usd);
+            } catch (err) {
+                console.error('Failed to fetch FLOW price:', err);
+                // Fallback price if API fails
+                setFlowPrice(0.65); 
+            }
+        };
+        fetchPrice();
+    }, []);
+
+    // Fetch mUSDC balance
+    const { data: usdcBalance, isLoading: isUsdcLoading } = useReadContract({
+        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
+        abi: MockUSDCABI,
+        functionName: 'balanceOf',
+        args: [address],
+    });
+
     // Fetch Vault shares balance to see if they HAVE yield
     const { data: vaultBalance } = useReadContract({
         address: CONTRACT_ADDRESSES.YieldVault as `0x${string}`,
         abi: YieldVaultABI,
         functionName: 'balanceOf',
-        args: [user?.wallet?.address],
+        args: [address],
     });
 
     // Fetch recent mUSDC transfers (same logic as Wallet.tsx)
     React.useEffect(() => {
-        if (!user?.wallet?.address || !publicClient) return;
-        const address = user.wallet.address as `0x${string}`;
+        if (!address || !publicClient) return;
 
         const fetchLogs = async () => {
             setIsHistoryLoading(true);
@@ -62,156 +94,249 @@ export default function DashboardPage() {
             }
         };
         fetchLogs();
-    }, [user?.wallet?.address, publicClient]);
+    }, [address, publicClient]);
 
-    const formattedBalance = balance ? parseFloat(formatUnits(balance.value, balance.decimals)).toFixed(2) : '0.00';
+    const flowVal = balance ? parseFloat(formatUnits(balance.value, balance.decimals)) : 0;
+    const usdcVal = usdcBalance ? parseFloat(formatUnits(usdcBalance as bigint, 18)) : 0;
+    
+    // Calculate Portfolio Value in USD
+    const totalFiatValue = (flowVal * (flowPrice || 0)) + usdcVal;
+
+    const formattedBalance = flowVal.toFixed(2);
+    const formattedUsdc = usdcVal.toFixed(2);
     const hasYield = vaultBalance && (vaultBalance as bigint) > 0n;
 
+    const handleCopyAddress = () => {
+        if (address) {
+            navigator.clipboard.writeText(address);
+            toast.success('Address copied!', {
+                description: 'The wallet address has been copied to your clipboard.',
+            });
+        }
+    };
+
     return (
-        <div className="bg-background-light text-neutral-dark min-h-screen flex flex-col">
+        <div className="bg-[#F8F9FA] text-slate-900 min-h-screen flex flex-col font-sans">
             {/* Header */}
-            <header className="bg-white px-4 pt-6 pb-4 flex items-center justify-between border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#4A90E2]/10 flex items-center justify-center overflow-hidden border border-[#4A90E2]/20">
-                        {/* Use a generic avatar or initials if real image is not available */}
-                        <div className="w-full h-full bg-primary/20 flex items-center justify-center text-primary font-bold uppercase">
+            <header className="bg-white px-6 pt-8 pb-6 flex items-center justify-between border-b border-slate-100">
+                <div className="flex items-center gap-4">
+                    <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-sm overflow-hidden group">
+                        <div className="size-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center text-primary font-black text-xl uppercase italic group-hover:scale-110 transition-transform">
                             {displayName[0]}
                         </div>
                     </div>
                     <div>
-                        <p className="text-xs text-[#4A4A4A] font-medium">Welcome back</p>
-                        <h1 className="text-lg font-bold text-[#1A1A1A] leading-tight capitalize">Hi, {displayName}!</h1>
+                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none mb-1">Portfolio</p>
+                        <h1 className="text-xl font-black text-slate-900 leading-tight capitalize italic">Hi, {displayName}!</h1>
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-[#F8F9FA] text-[#4A4A4A]">
-                        <span className="material-symbols-outlined">notifications</span>
+                <div className="flex gap-3">
+                    <button className="size-11 flex items-center justify-center rounded-2xl bg-white text-slate-400 border border-slate-100 shadow-sm hover:text-primary transition-colors">
+                        <span className="material-symbols-outlined text-2xl">notifications</span>
                     </button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-[#F8F9FA] text-[#4A4A4A]">
-                        <span className="material-symbols-outlined">qr_code_scanner</span>
+                    <button 
+                        onClick={() => setShowReceiveModal(true)}
+                        className="size-11 flex items-center justify-center rounded-2xl bg-white text-slate-400 border border-slate-100 shadow-sm hover:text-primary transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-2xl">qr_code_scanner</span>
                     </button>
                 </div>
             </header>
 
-            <main className="flex-1 overflow-y-auto pb-24">
-                {/* Balance Card */}
-                <div className="p-4">
-                    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col gap-6">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-sm font-medium text-[#4A4A4A] mb-1 flex items-center gap-1">
-                                    Total Balance <span className="material-symbols-outlined text-xs">visibility</span>
+            <main className="flex-1 overflow-y-auto pb-28 px-6 pt-6 space-y-8">
+                {/* Total Balance Card */}
+                <div className="relative group">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-blue-600 rounded-[34px] blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
+                    <div className="relative bg-white rounded-[32px] p-8 shadow-sm border border-slate-100 flex flex-col gap-8 overflow-hidden">
+                        {/* Decorative background element */}
+                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] -mr-4 -mt-4">
+                            <Sparkles size={120} />
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    Unified Net Worth <span className="material-symbols-outlined text-[14px]">visibility</span>
                                 </p>
-                                <h2 className="text-3xl font-bold tracking-tight text-[#1A1A1A]">
-                                    {isBalanceLoading ? '...' : formattedBalance} {balance?.symbol || 'FLOW'}
-                                </h2>
-                                <p className="text-[10px] text-neutral-muted mt-2 font-mono truncate max-w-[150px]">
-                                    {user?.wallet?.address}
-                                </p>
+                                <div className="flex items-baseline gap-2">
+                                    <h2 className="text-4xl font-black tracking-tight text-slate-900 italic">
+                                        ${totalFiatValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </h2>
+                                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">USD Equivalent</span>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1 bg-[#F8F9FA] px-2 py-1 rounded text-[10px] font-bold text-[#4A4A4A] border border-gray-200 uppercase tracking-wider">
-                                <span className="material-symbols-outlined text-xs text-[#4A90E2]">change_history</span> Flow EVM
+
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl self-start">
+                                    <div className="size-4 rounded-full bg-primary border-2 border-white flex items-center justify-center text-[8px] font-bold text-white italic">F</div>
+                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                                        {formattedBalance} FLOW <span className="text-slate-300 mx-1">/</span> <span className="text-primary">${(flowVal * (flowPrice || 0)).toFixed(2)}</span>
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl self-start">
+                                    <div className="size-4 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-[8px] font-bold text-white">U</div>
+                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                                        {formattedUsdc} USDC <span className="text-slate-300 mx-1">/</span> <span className="text-blue-500">${usdcVal.toFixed(2)}</span>
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                        <div className="flex gap-3">
-                            <button className="flex-1 bg-[#4A90E2] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors">
-                                <span className="material-symbols-outlined text-lg">add_circle</span>
-                                Add Funds
-                            </button>
-                            <Link href="/send" className="flex-1 bg-[#E6F0FA] text-[#4A90E2] font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors">
-                                <span className="material-symbols-outlined text-lg">near_me</span>
+
+                        <div className="flex gap-4">
+                            <Link href="/buy" className="flex-1 bg-primary text-white font-black py-5 rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                                <span className="material-symbols-outlined text-lg !font-black">add_circle</span>
+                                Top Up
+                            </Link>
+                            <Link href="/send" className="flex-1 bg-white border-2 border-slate-50 text-slate-900 font-black py-5 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all">
+                                <span className="material-symbols-outlined text-lg !font-black">near_me</span>
                                 Send
                             </Link>
                         </div>
                     </div>
                 </div>
 
-                {/* Yield Banner */}
-                <div className="px-4 mb-6">
-                    <Link href="/earn" className={`${hasYield ? 'bg-[#D4F4E2] border-[#27AE60]/20' : 'bg-blue-50 border-blue-100'} border rounded-lg p-4 flex items-center justify-between transition-all`}>
-                        <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 bg-white rounded-full flex items-center justify-center ${hasYield ? 'text-[#27AE60]' : 'text-primary'} shadow-sm`}>
-                                <span className="material-symbols-outlined">{hasYield ? 'account_balance' : 'rocket_launch'}</span>
-                            </div>
-                            <div>
-                                <p className={`${hasYield ? 'text-[#27AE60]' : 'text-primary'} font-bold text-sm leading-tight`}>
-                                    {hasYield ? 'Your yield is growing!' : 'Start Earning Yield'}
-                                </p>
-                                <p className={`${hasYield ? 'text-[#27AE60]/80' : 'text-primary/70'} text-xs`}>
-                                    {hasYield ? 'Vault assets are working for you.' : 'Put your idle mUSDC to work.'}
+                {/* Receive Modal */}
+                {showReceiveModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md">
+                        <div className="bg-white w-full max-w-sm rounded-[40px] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
+                            <div className="p-10 flex flex-col items-center text-center space-y-8">
+                                <div className="flex justify-between items-center w-full">
+                                    <h2 className="text-xl font-black text-slate-900 italic tracking-tight">Receive Funds</h2>
+                                    <button onClick={() => setShowReceiveModal(false)} className="text-slate-300">
+                                        <span className="material-symbols-outlined">close</span>
+                                    </button>
+                                </div>
+
+                                <div className="p-4 bg-slate-50 rounded-[32px] border-2 border-slate-100 flex items-center justify-center group transition-all hover:bg-white hover:border-primary/20">
+                                    {address ? (
+                                        <QRCodeSVG 
+                                            value={address} 
+                                            size={200} 
+                                            fgColor="#1A1A1A"
+                                            includeMargin={true}
+                                        />
+                                    ) : (
+                                        <div className="size-48 flex items-center justify-center">
+                                            <div className="size-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4 w-full">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Your Wallet Address</p>
+                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 break-all text-[11px] font-mono font-bold text-slate-600">
+                                            {address || 'Connecting...'}
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={handleCopyAddress}
+                                        className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">content_copy</span>
+                                        Copy Address
+                                    </button>
+                                </div>
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[12px] text-success">verified</span> Flow EVM Network
                                 </p>
                             </div>
                         </div>
-                        <span className={`material-symbols-outlined ${hasYield ? 'text-[#27AE60]' : 'text-primary'}`}>chevron_right</span>
+                    </div>
+                )}
+                
+                {/* Rest of the original Dashboard content... */}
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center px-1">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Live Status</h3>
+                        {hasYield && <span className="flex items-center gap-1.5 text-[9px] font-black text-success uppercase tracking-widest animate-pulse">
+                            <span className="size-1.5 rounded-full bg-success" /> Multiplier Active
+                        </span>}
+                    </div>
+                    
+                    <Link href="/earn" className={`relative rounded-3xl p-6 flex items-center justify-between border transition-all active:scale-[0.98] group overflow-hidden ${hasYield ? 'bg-success/5 border-success/10' : 'bg-primary/5 border-primary/10'}`}>
+                        <div className="flex items-center gap-5 relative z-10">
+                            <div className={`size-14 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform ${hasYield ? 'bg-white text-success' : 'bg-white text-primary'}`}>
+                                <span className="material-symbols-outlined text-3xl material-symbols-filled">
+                                    {hasYield ? 'account_balance' : 'rocket_launch'}
+                                </span>
+                            </div>
+                            <div>
+                                <h4 className={`text-sm font-black italic tracking-tight ${hasYield ? 'text-success' : 'text-primary'}`}>
+                                    {hasYield ? 'Your savings are active' : 'Start Earning Yield'}
+                                </h4>
+                                <p className="text-xs font-bold text-slate-500">
+                                    {hasYield ? 'Vault assets are working for you' : 'Put your idle mUSDC to work'}
+                                </p>
+                            </div>
+                        </div>
+                        <div className={`flex items-center gap-1 ${hasYield ? 'text-success' : 'text-primary'}`}>
+                             <span className="text-xs font-black italic tracking-tighter">View</span>
+                             <span className="material-symbols-outlined">chevron_right</span>
+                        </div>
                     </Link>
                 </div>
 
-                {/* Quick Actions Grid */}
-                <div className="px-4 mb-8">
-                    <h3 className="text-sm font-bold text-[#4A4A4A] mb-4 uppercase tracking-wider">Quick Actions</h3>
-                    <div className="grid grid-cols-4 gap-4">
-                        <Link href="/buy" className="flex flex-col items-center gap-2">
-                            <button className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#4A90E2] border border-gray-100">
-                                <span className="material-symbols-outlined text-2xl">account_balance_wallet</span>
-                            </button>
-                            <span className="text-[11px] font-semibold text-[#4A4A4A] text-center">Buy Crypto</span>
+                {/* Quick Shortcuts */}
+                <div className="grid grid-cols-3 gap-6">
+                    {[
+                        { href: '/spend', name: 'Spend', icon: 'shopping_cart_checkout', color: '#4A90E2' },
+                        { href: '/social', name: 'Pots', icon: 'groups', color: '#B45309' },
+                        { href: '/wallet', name: 'History', icon: 'history', color: '#64748b' },
+                    ].map((btn) => (
+                        <Link key={btn.name} href={btn.href} className="flex flex-col items-center gap-3 group">
+                            <div className="size-16 rounded-[24px] bg-white shadow-sm flex items-center justify-center border border-slate-100 group-hover:border-primary group-hover:shadow-lg group-hover:shadow-primary/5 transition-all text-slate-400 group-hover:text-primary">
+                                <span className="material-symbols-outlined text-3xl">{btn.icon}</span>
+                            </div>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{btn.name}</span>
                         </Link>
-                        <Link href="/earn" className="flex flex-col items-center gap-2">
-                            <button className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#4A90E2] border border-gray-100">
-                                <span className="material-symbols-outlined text-2xl">show_chart</span>
-                            </button>
-                            <span className="text-[11px] font-semibold text-[#4A4A4A] text-center">Yield</span>
-                        </Link>
-                        <Link href="/receipt" className="flex flex-col items-center gap-2">
-                            <button className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#4A90E2] border border-gray-100">
-                                <span className="material-symbols-outlined text-2xl">receipt_long</span>
-                            </button>
-                            <span className="text-[11px] font-semibold text-[#4A4A4A] text-center">Pay</span>
-                        </Link>
-                        <Link href="/social" className="flex flex-col items-center gap-2">
-                            <button className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#4A90E2] border border-gray-100">
-                                <span className="material-symbols-outlined text-2xl">groups</span>
-                            </button>
-                            <span className="text-[11px] font-semibold text-[#4A4A4A] text-center">Pots</span>
-                        </Link>
-                    </div>
+                    ))}
                 </div>
 
-                {/* Recent Transactions */}
-                <div className="px-4">
-                    <div className="flex items-center justify-between mb-4 px-1">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Recent Activity</h3>
-                        <Link href="/wallet" className="text-[10px] font-black text-primary uppercase tracking-widest">View All</Link>
+                {/* Activity Feed */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between px-1">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Recent Activity</h3>
+                        <Link href="/wallet" className="text-[9px] font-black text-primary uppercase tracking-[0.1em] underline decoration-primary/30 underline-offset-4">Full History</Link>
                     </div>
+                    
                     <div className="space-y-3">
                         {isHistoryLoading ? (
-                            <div className="py-8 flex flex-col items-center gap-2">
-                                <div className="size-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Syncing...</p>
+                            <div className="py-12 flex flex-col items-center gap-3">
+                                <div className="size-6 border-2 border-primary/10 border-t-primary rounded-full animate-spin"></div>
+                                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Syncing Nodes</p>
                             </div>
                         ) : transactions.length === 0 ? (
-                            <div className="bg-white p-6 rounded-2xl border border-dashed border-slate-200 flex flex-col items-center text-center gap-2">
-                                <History size={24} className="text-slate-200" />
-                                <p className="text-xs font-bold text-slate-400">No recent activity</p>
+                            <div className="bg-white p-10 rounded-[32px] border border-dashed border-slate-200 flex flex-col items-center text-center gap-4 opacity-60">
+                                <History size={32} className="text-slate-200" />
+                                <div className="space-y-1">
+                                    <p className="text-xs font-black text-slate-400 uppercase">System Clean</p>
+                                    <p className="text-[10px] font-bold text-slate-300 px-8">No recent peer transfers found in the ledger.</p>
+                                </div>
                             </div>
                         ) : (
                             transactions.map((tx, i) => {
-                                const isOutgoing = tx.args.from.toLowerCase() === user?.wallet?.address?.toLowerCase();
+                                const isOutgoing = tx.args.from.toLowerCase() === address?.toLowerCase();
                                 const amount = formatUnits(tx.args.value, 18);
                                 return (
-                                    <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
+                                    <div key={i} className="bg-white p-5 rounded-[24px] border border-slate-100 flex items-center justify-between shadow-sm transition-all hover:border-slate-200">
                                         <div className="flex items-center gap-4">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isOutgoing ? 'bg-amber-50 text-amber-600' : 'bg-success/10 text-success'}`}>
-                                                {isOutgoing ? <ArrowUpRight size={18} /> : <ArrowDownLeft size={18} />}
+                                            <div className={`size-12 rounded-2xl flex items-center justify-center transition-colors ${isOutgoing ? 'bg-amber-50 text-amber-600' : 'bg-success/5 text-success'}`}>
+                                                {isOutgoing ? <ArrowUpRight size={22} strokeWidth={3} /> : <ArrowDownLeft size={22} strokeWidth={3} />}
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-[#1A1A1A]">{isOutgoing ? 'Sent mUSDC' : 'Received mUSDC'}</p>
-                                                <p className="text-[10px] text-neutral-muted uppercase font-bold tracking-tight">Confirmed</p>
+                                            <div className="space-y-0.5">
+                                                <p className="text-sm font-black text-slate-900 italic tracking-tight">
+                                                    {isOutgoing ? 'Sent mUSDC' : 'Received mUSDC'}
+                                                </p>
+                                                <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest">Confirmed • Block {Number(tx.blockNumber).toLocaleString()}</p>
                                             </div>
                                         </div>
-                                        <p className={`text-sm font-black ${isOutgoing ? 'text-slate-900' : 'text-success'}`}>
-                                            {isOutgoing ? '-' : '+'}{parseFloat(amount).toFixed(2)}
-                                        </p>
+                                        <div className="text-right">
+                                            <p className={`text-lg font-black tracking-tighter ${isOutgoing ? 'text-slate-900' : 'text-success'}`}>
+                                                {isOutgoing ? '-' : '+'}{parseFloat(amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            </p>
+                                            <p className="text-[8px] text-slate-300 font-black uppercase tracking-widest">USDC</p>
+                                        </div>
                                     </div>
                                 );
                             })

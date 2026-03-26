@@ -2,12 +2,15 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { usePrivy } from '@/lib/mock-privy';
+import { usePrivy } from '@privy-io/react-auth';
+import { useAccount } from 'wagmi';
 import { toast } from 'sonner';
 
 export default function BuyScreen() {
     const router = useRouter();
     const { user } = usePrivy();
+    const { address: wagmiAddress } = useAccount();
+    const address = (user?.wallet?.address || wagmiAddress) as `0x${string}`;
     const [usdAmount, setUsdAmount] = React.useState('100');
     const [showSimulation, setShowSimulation] = React.useState(false);
     const [simStep, setSimStep] = React.useState(0);
@@ -15,18 +18,22 @@ export default function BuyScreen() {
     const usdcReceived = (parseFloat(usdAmount || '0') * 0.9845).toFixed(2);
 
     const handleStartPurchase = () => {
-        setShowSimulation(true);
-        setSimStep(1);
+        if (!address) {
+            toast.error('Connect wallet', { description: 'Please log in to buy crypto.' });
+            return;
+        }
 
-        // Simulate Ramp Overlay Flow
-        setTimeout(() => setSimStep(2), 2000); // "Connecting to Ramp..."
-        setTimeout(() => setSimStep(3), 4500); // "Processing Payment..."
-        setTimeout(() => {
-            toast.success('USDC Received!', {
-                description: `${usdcReceived} USDC has been deposited to your wallet.`,
-            });
-            router.push(`/receipt?amount=${usdcReceived}&type=Bought+USDC`);
-        }, 6500);
+        // Construct the Bare Metal Ramp Sandbox URL
+        const rampUrl = `https://app.demo.ramp.network/` +
+            `?userAddress=${address}` +
+            `&defaultAsset=FLOW`;
+
+        // Launch the actual Ramp window safely
+        window.open(rampUrl, '_blank');
+        
+        toast.info('Opening Ramp Sandbox', {
+            description: 'Complete your purchase in the secure window.',
+        });
     };
 
     return (

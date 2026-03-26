@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePrivy } from '@/lib/mock-privy';
+import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ArrowUpRight, ArrowDownLeft, Wallet as WalletIcon, History, ExternalLink } from 'lucide-react';
+import { usePrivy } from '@privy-io/react-auth';
 import Link from 'next/link';
 import { useAccount, useBalance, usePublicClient } from 'wagmi';
 import { formatUnits, parseAbiItem } from 'viem';

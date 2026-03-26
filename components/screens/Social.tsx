@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useReadContract, useWriteContract } from 'wagmi';
+import { useReadContract, useWriteContract, useAccount } from 'wagmi';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import SharedPotFactoryABI from '@/lib/abi/SharedPotFactory.json';
 import SharedPotABI from '@/lib/abi/SharedPot.json';
@@ -9,11 +9,17 @@ import MockUSDCABI from '@/lib/abi/MockUSDC.json';
 import { formatUnits, parseUnits } from 'viem';
 import { flowEVMTestnet, config } from '@/lib/web3-config';
 import { waitForTransactionReceipt } from 'wagmi/actions';
-import { usePrivy } from '@/lib/mock-privy';
+import { usePrivy } from '@privy-io/react-auth';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+import { QRCodeSVG } from 'qrcode.react';
+
 export default function SocialScreen() {
+    const router = useRouter();
     const { user } = usePrivy();
+    const { address: wagmiAddress } = useAccount();
+    const address = (user?.wallet?.address || wagmiAddress) as `0x${string}`;
     const { writeContractAsync } = useWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [showModal, setShowModal] = React.useState(false);
@@ -49,6 +55,8 @@ export default function SocialScreen() {
             toast.success('Social Pot created!', {
                 description: `Successfully started "${potName}" with a $${potTarget} goal.`,
             });
+            // Redirect to receipt for creating the pot
+            router.push(`/receipt?amount=${potTarget}&type=${encodeURIComponent('Created Social Pot: ' + potName)}&hash=${createHash}`);
         } catch (error) {
             console.error('Create pot failed:', error);
             toast.error('Failed to create pot', {
@@ -60,92 +68,114 @@ export default function SocialScreen() {
     };
 
     return (
-        <div className="bg-white flex flex-col min-h-screen">
+        <div className="bg-[#F8F9FA] flex flex-col min-h-screen text-slate-900">
             {/* Header */}
-            <header className="flex items-center bg-white p-4 sticky top-0 z-10 border-b border-slate-100 justify-between">
-                <h1 className="text-neutral-dark text-xl font-bold">Social Pots</h1>
-                <div className="flex items-center justify-end">
-                    <button
-                        onClick={() => setShowModal(true)}
-                        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                    >
-                        <span className="material-symbols-outlined">add</span>
-                    </button>
+            <header className="flex items-center bg-white p-6 sticky top-0 z-10 border-b border-slate-100 justify-between">
+                <div>
+                    <h1 className="text-xl font-black italic tracking-tight">Social Pots</h1>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Saving Together</p>
                 </div>
+                <button
+                    onClick={() => setShowModal(true)}
+                    className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/10 hover:bg-primary/20 transition-all font-black"
+                >
+                    <span className="material-symbols-outlined">add</span>
+                </button>
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-4 space-y-6">
-                <div>
-                    <h2 className="text-neutral-dark text-lg font-bold leading-tight">Active Pots</h2>
-                    <p className="text-neutral-muted text-sm mb-4">Saving together with friends</p>
-
-                    <div className="space-y-4 pb-24">
-                        {isLoading && (
-                            <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-                                <div className="w-12 h-12 bg-slate-100 rounded-full mb-4"></div>
-                                <div className="h-4 w-32 bg-slate-100 rounded mb-2"></div>
-                                <div className="h-3 w-24 bg-slate-100 rounded"></div>
+            <main className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="space-y-4 pb-24">
+                    {isLoading && (
+                        <div className="flex flex-col items-center justify-center py-20 animate-pulse space-y-4">
+                            <div className="size-16 bg-slate-100 rounded-[20px]"></div>
+                            <div className="space-y-2 flex flex-col items-center">
+                                <div className="h-4 w-32 bg-slate-100 rounded"></div>
+                                <div className="h-2 w-24 bg-slate-100 rounded"></div>
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {!isLoading && (!pots || (pots as any[]).length === 0) && (
-                            <div className="text-center py-20 bg-background-light rounded-2xl border border-dashed border-gray-200">
-                                <span className="material-symbols-outlined text-4xl text-neutral-muted mb-2">folder_open</span>
-                                <p className="text-sm text-neutral-muted font-bold">No active pots yet</p>
-                                <p className="text-xs text-neutral-muted mt-1 px-10">Start a new pot to save for a goal with your friends!</p>
+                    {!isLoading && (!pots || (pots as any[]).length === 0) && (
+                        <div className="text-center py-24 bg-white rounded-[40px] border border-dashed border-slate-200 flex flex-col items-center space-y-6">
+                            <div className="size-20 rounded-[32px] bg-slate-50 flex items-center justify-center text-slate-200">
+                                <span className="material-symbols-outlined text-4xl font-black">folder_open</span>
                             </div>
-                        )}
+                            <div className="space-y-2">
+                                <p className="text-sm font-black text-slate-400 uppercase tracking-widest leading-tight">No Active Pots</p>
+                                <p className="text-xs text-slate-300 font-bold px-12 leading-relaxed">Start a new collective goal and invite your friends to save with you.</p>
+                            </div>
+                            <button onClick={() => setShowModal(true)} className="text-primary font-black text-[10px] uppercase tracking-widest border-2 border-primary/20 px-6 py-3 rounded-2xl flex items-center gap-2 hover:bg-primary/5 transition-colors">
+                                <span className="material-symbols-outlined text-xs">add</span>
+                                Create First Pot
+                            </button>
+                        </div>
+                    )}
 
-                        {pots &&
-                            (pots as any[]).map((potAddress: string) => (
-                                <PotCard key={potAddress} address={potAddress} />
-                            ))}
-                    </div>
+                    {pots &&
+                        (pots as any[]).map((potAddress: string) => (
+                            <PotCard key={potAddress} address={potAddress} />
+                        ))}
                 </div>
             </main>
 
             {/* Creation Modal */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
-                        <div className="p-8 space-y-6">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md">
+                    <div className="bg-white w-full max-w-sm rounded-[40px] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+                        <div className="p-10 space-y-8">
                             <div className="flex justify-between items-center">
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tight">New Pot</h2>
-                                <button onClick={() => setShowModal(false)} className="text-slate-400">
+                                <div className="space-y-1">
+                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight italic leading-none">New Pot</h2>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Define your goal</p>
+                                </div>
+                                <button onClick={() => setShowModal(false)} className="text-slate-300 hover:text-slate-900 transition-colors">
                                     <span className="material-symbols-outlined">close</span>
                                 </button>
                             </div>
 
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Pot Name</label>
+                            <div className="space-y-6">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Goal Name</label>
                                     <input
                                         type="text"
                                         value={potName}
                                         onChange={(e) => setPotName(e.target.value)}
                                         placeholder="e.g. Summer Trip 2024"
-                                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-primary outline-none"
+                                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 font-black text-slate-900 focus:border-primary outline-none transition-all placeholder:text-slate-300"
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Savings Target (mUSDC)</label>
-                                    <input
-                                        type="number"
-                                        value={potTarget}
-                                        onChange={(e) => setPotTarget(e.target.value)}
-                                        placeholder="500"
-                                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-slate-900 focus:border-primary outline-none"
-                                    />
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Savings Target (mUSDC)</label>
+                                    <div className="relative group">
+                                        <input
+                                            type="number"
+                                            value={potTarget}
+                                            onChange={(e) => setPotTarget(e.target.value)}
+                                            placeholder="500"
+                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 font-black text-slate-900 focus:border-primary outline-none transition-all placeholder:text-slate-300"
+                                        />
+                                        <div className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white border border-slate-100 px-3 py-1.5 rounded-lg shadow-sm">USDC</div>
+                                    </div>
                                 </div>
                             </div>
 
                             <button
                                 onClick={handleCreatePot}
                                 disabled={isUpdating || !potName || !potTarget}
-                                className="w-full bg-primary text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50 active:scale-95"
+                                className="w-full bg-primary text-white py-6 rounded-[28px] font-black text-lg shadow-2xl shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
                             >
-                                {isUpdating ? 'Creating...' : 'Start Pot'}
+                                {isUpdating ? (
+                                    <>
+                                        <span className="material-symbols-outlined animate-spin">sync</span>
+                                        Deploying...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined">rocket_launch</span>
+                                        Start Goal
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -156,10 +186,12 @@ export default function SocialScreen() {
 }
 
 function PotCard({ address }: { address: string }) {
+    const router = useRouter();
     const { user } = usePrivy();
     const { writeContractAsync } = useWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [amount, setAmount] = React.useState('10');
+    const [showShareModal, setShowShareModal] = React.useState(false);
 
     // Fetch account allowance for this pot
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -233,6 +265,8 @@ function PotCard({ address }: { address: string }) {
             toast.success('Contribution sent!', {
                 description: `Successfully added ${amount} mUSDC to the pot.`,
             });
+            // Redirect to receipt
+            router.push(`/receipt?amount=${amount}&type=${encodeURIComponent('Pot Contribution: ' + name)}&hash=${contributeHash}`);
         } catch (error) {
             console.error('Contribution flow failed:', error);
             toast.error('Contribution failed', {
@@ -262,6 +296,8 @@ function PotCard({ address }: { address: string }) {
             toast.success('Funds claimed!', {
                 description: 'The pot savings have been transferred to your wallet.',
             });
+            // Redirect to receipt
+            router.push(`/receipt?amount=${formatUnits(currentVal, 18)}&type=${encodeURIComponent('Claimed Social Pot: ' + name)}&hash=${withdrawHash}`);
         } catch (error) {
             console.error('Withdraw failed:', error);
             toast.error('Claim failed', {
@@ -277,62 +313,138 @@ function PotCard({ address }: { address: string }) {
     const progress = targetVal > 0n ? Number((currentVal * 100n) / targetVal) : 0;
     const isCreator = user?.wallet?.address && creator && user.wallet.address.toLowerCase() === (creator as string).toLowerCase();
 
+    // Generate a deep link for the pot (placeholder URL)
+    const potLink = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}/social?address=${address}` : `https://farsi.app/social?address=${address}`;
+
     return (
-        <div className="flex flex-col rounded-3xl border border-slate-100 bg-white shadow-sm overflow-hidden text-neutral-dark">
-            <div className="p-6 flex flex-col gap-5">
-                <div className="flex justify-between items-start">
-                    <div className="flex gap-4">
-                        <div className="h-14 w-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary border border-primary/5">
-                            <span className="material-symbols-outlined text-3xl">savings</span>
+        <div className="group relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-orange-400 rounded-[34px] blur opacity-0 group-hover:opacity-10 transition duration-500"></div>
+            <div className="relative flex flex-col rounded-[32px] border border-slate-100 bg-white shadow-sm overflow-hidden text-slate-900 transition-all hover:shadow-xl hover:shadow-primary/5">
+                <div className="p-8 flex flex-col gap-6">
+                    <div className="flex justify-between items-start">
+                        <div className="flex gap-4">
+                            <div className={`size-16 rounded-[24px] flex items-center justify-center transition-all ${progress >= 100 ? 'bg-success/5 text-success border-success/10' : 'bg-primary/5 text-primary border-primary/10'} border`}>
+                                <span className="material-symbols-outlined text-3xl font-black">{progress >= 100 ? 'task_alt' : 'savings'}</span>
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black tracking-tight italic">{(name as string) || 'Loading Pot...'}</h3>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                        Goal: ${target ? formatUnits(targetVal, 18) : '0'}
+                                    </p>
+                                    <span className="size-1 rounded-full bg-slate-200" />
+                                    <button 
+                                        onClick={() => setShowShareModal(true)}
+                                        className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-1"
+                                    >
+                                        <span className="material-symbols-outlined text-[12px]">share</span> Share
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="text-slate-900 text-lg font-black tracking-tight">{(name as string) || 'Loading Pot...'}</h3>
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Target: ${target ? formatUnits(targetVal, 18) : '0'}</p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-end px-1">
+                            <div className="space-y-0.5">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saved So Far</p>
+                                <span className="text-3xl font-black text-slate-900 italic tracking-tighter">
+                                    ${current ? formatUnits(currentVal, 18) : '0.00'}
+                                </span>
+                            </div>
+                            <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${progress >= 100 ? 'bg-success text-white shadow-lg shadow-success/20' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>
+                                {progress}% Complete
+                            </div>
                         </div>
+                        <div className="h-4 w-full rounded-2xl bg-slate-50 overflow-hidden border border-slate-100 p-1">
+                            <div 
+                                className={`h-full rounded-full transition-all duration-1000 ease-out shadow-inner ${progress >= 100 ? 'bg-success' : 'bg-primary'}`} 
+                                style={{ width: `${Math.min(progress, 100)}%` }}
+                            ></div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-4 pt-4 border-t border-slate-50">
+                        <div className="flex gap-3">
+                            <div className="flex-1 relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs italic">$</span>
+                                <input
+                                    type="number"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl pl-8 pr-4 text-sm font-black text-slate-900 focus:border-primary focus:bg-white outline-none transition-all"
+                                />
+                            </div>
+                            <button
+                                onClick={handleContribute}
+                                disabled={isUpdating}
+                                className="flex-[1.5] h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 shadow-xl shadow-primary/20"
+                            >
+                                {isUpdating ? (
+                                    <span className="material-symbols-outlined animate-spin text-sm">sync</span>
+                                ) : (
+                                    <span className="material-symbols-outlined text-sm">add</span>
+                                )}
+                                {isUpdating ? 'Saving...' : 'Contribute'}
+                            </button>
+                        </div>
+
+                        {isCreator && currentVal >= targetVal && (
+                            <button
+                                onClick={handleWithdraw}
+                                disabled={isUpdating}
+                                className="h-14 bg-success text-white rounded-2xl font-black text-sm tracking-widest uppercase transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 shadow-xl shadow-success/20"
+                            >
+                                <span className="material-symbols-outlined">verified</span>
+                                Claim Vault Savings
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                <div className="space-y-3">
-                    <div className="flex justify-between items-end">
-                        <span className="text-2xl font-black text-slate-900">${current ? formatUnits(currentVal, 18) : '0.00'}</span>
-                        <div className="bg-success/10 text-success text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-tighter">
-                            {progress}% Goal
+                {/* Pot Share Modal */}
+                {showShareModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md">
+                        <div className="bg-white w-full max-w-sm rounded-[40px] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
+                            <div className="p-10 flex flex-col items-center text-center space-y-8">
+                                <div className="flex justify-between items-center w-full">
+                                    <h2 className="text-xl font-black text-slate-900 italic tracking-tight">Share Goal</h2>
+                                    <button onClick={() => setShowShareModal(false)} className="text-slate-300 hover:text-slate-900">
+                                        <span className="material-symbols-outlined">close</span>
+                                    </button>
+                                </div>
+
+                                <div className="p-4 bg-slate-50 rounded-[32px] border-2 border-slate-100 shadow-inner group">
+                                    <QRCodeSVG 
+                                        value={potLink} 
+                                        size={200} 
+                                        fgColor="#1A1A1A"
+                                        includeMargin={true}
+                                    />
+                                </div>
+
+                                <div className="space-y-4 w-full text-center">
+                                    <div className="space-y-1">
+                                        <h3 className="text-lg font-black text-slate-900 italic">{(name as string) || 'Social Pot'}</h3>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 leading-relaxed">
+                                            Scan this code with a Farsi wallet to contribute directly to this pot.
+                                        </p>
+                                    </div>
+                                    <button 
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(potLink);
+                                            toast.success('Link copied!', { description: 'Share this link to invite others.' });
+                                        }}
+                                        className="w-full bg-slate-100 text-slate-900 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-slate-200 transition-all active:scale-95"
+                                    >
+                                        <span className="material-symbols-outlined text-[14px]">content_copy</span>
+                                        Copy Pot Link
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div className="h-3 w-full rounded-full bg-slate-50 overflow-hidden border border-slate-100">
-                        <div className="h-full bg-primary transition-all duration-1000 ease-out" style={{ width: `${Math.min(progress, 100)}%` }}></div>
-                    </div>
-                </div>
-
-                <div className="flex flex-col gap-3 pt-2">
-                    <div className="flex gap-2">
-                        <input
-                            type="number"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            className="w-24 bg-slate-50 border border-slate-100 rounded-xl px-3 text-sm font-bold text-slate-900 focus:border-primary outline-none"
-                        />
-                        <button
-                            onClick={handleContribute}
-                            disabled={isUpdating}
-                            className="flex-1 h-12 bg-primary hover:bg-primary/90 text-white rounded-xl font-black transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 shadow-lg shadow-primary/10"
-                        >
-                            <span className="material-symbols-outlined text-sm">{isUpdating ? 'sync' : 'add'}</span>
-                            {isUpdating ? 'Wait...' : 'Contribute'}
-                        </button>
-                    </div>
-
-                    {isCreator && currentVal >= targetVal && (
-                        <button
-                            onClick={handleWithdraw}
-                            disabled={isUpdating}
-                            className="h-12 bg-success text-white rounded-xl font-black transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 shadow-lg shadow-success/10"
-                        >
-                            <span className="material-symbols-outlined text-sm">check_circle</span>
-                            Claim Savings
-                        </button>
-                    )}
-                </div>
+                )}
             </div>
         </div>
     );

@@ -3,7 +3,11 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
-function ReceiptContent() {
+interface ReceiptProps {
+    withShare?: boolean;
+}
+
+function ReceiptContent({ withShare }: ReceiptProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -67,23 +71,36 @@ function ReceiptContent() {
                 </div>
 
                 <div className="px-6 pb-8 pt-6 border-t border-gray-100 space-y-3">
+                    {searchParams.get('hash') && (
+                        <a
+                            href={`https://evm-testnet.flowscan.io/tx/${searchParams.get('hash')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-5 bg-white border-2 border-slate-100 text-slate-400 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95"
+                        >
+                            <span className="material-symbols-outlined !text-xl">open_in_new</span>
+                            View on Flowscan
+                        </a>
+                    )}
                     <button onClick={() => router.push('/')} className="w-full py-5 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all">
                         Done
                     </button>
-                    <button className="w-full py-5 bg-white border-2 border-slate-100 text-slate-900 font-black rounded-2xl hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center gap-2">
-                        <span className="material-symbols-outlined !text-xl">share</span>
-                        Share Receipt
-                    </button>
+                    {!withShare && (
+                        <button className="w-full py-5 bg-white border-2 border-slate-100 text-slate-900 font-black rounded-2xl hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <span className="material-symbols-outlined !text-xl">share</span>
+                            Share Receipt
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
     );
 }
 
-export default function ReceiptScreen() {
+export default function ReceiptScreen({ withShare }: ReceiptProps) {
     return (
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading Receipt...</div>}>
-            <ReceiptContent />
+            <ReceiptContent withShare={withShare} />
         </Suspense>
     );
 }

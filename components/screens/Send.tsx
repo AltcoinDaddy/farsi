@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import { usePrivy } from '@privy-io/react-auth';
 import { ChevronLeft, ArrowUpRight, Search, Wallet } from 'lucide-react';
-import { useWriteContract, useAccount, useReadContract } from 'wagmi';
+import Link from 'next/link';
+import { useWriteContract, useAccount, useReadContract, usePublicClient } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
@@ -12,7 +13,9 @@ import { waitForTransactionReceipt } from 'wagmi/actions';
 import { toast } from 'sonner';
 
 export default function SendScreen() {
-    const { address } = useAccount();
+    const { user } = usePrivy();
+    const { address: wagmiAddress } = useAccount();
+    const address = (user?.wallet?.address || wagmiAddress) as `0x${string}`;
     const { writeContractAsync } = useWriteContract();
     const [recipient, setRecipient] = React.useState('');
     const [amount, setAmount] = React.useState('');

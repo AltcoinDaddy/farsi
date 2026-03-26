@@ -4,13 +4,12 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider, createConfig, http } from 'wagmi';
 import { flowEVMTestnet } from '@/lib/web3-config';
-import { MockPrivyProvider } from '@/lib/mock-privy';
+import { PrivyProvider } from '@privy-io/react-auth';
 import { AuthGuard } from '@/components/AuthGuard';
 
 const queryClient = new QueryClient();
 
-// Minimal Wagmi config
-const wagmiConfig = createConfig({
+export const wagmiConfig = createConfig({
     chains: [flowEVMTestnet],
     transports: {
         [flowEVMTestnet.id]: http(),
@@ -19,14 +18,30 @@ const wagmiConfig = createConfig({
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
-        <MockPrivyProvider>
-            <AuthGuard>
+        <PrivyProvider
+            appId="cmn7qmuq704sl0cl8omche88f"
+            config={{
+                appearance: {
+                    theme: 'light',
+                    accentColor: '#4A90E2',
+                    showWalletLoginFirst: true,
+                },
+                embeddedWallets: {
+                    ethereum: {
+                        createOnLogin: 'users-without-wallets',
+                    },
+                },
+                defaultChain: flowEVMTestnet,
+                supportedChains: [flowEVMTestnet],
+            }}
+        >
+            <QueryClientProvider client={queryClient}>
                 <WagmiProvider config={wagmiConfig}>
-                    <QueryClientProvider client={queryClient}>
+                    <AuthGuard>
                         {children}
-                    </QueryClientProvider>
+                    </AuthGuard>
                 </WagmiProvider>
-            </AuthGuard>
-        </MockPrivyProvider>
+            </QueryClientProvider>
+        </PrivyProvider>
     );
 }

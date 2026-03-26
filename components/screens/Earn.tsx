@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { usePrivy } from '@/lib/mock-privy';
+import { usePrivy } from '@privy-io/react-auth';
 import { useReadContract, useWriteContract } from 'wagmi';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import YieldVaultABI from '@/lib/abi/YieldVault.json';
@@ -104,6 +104,7 @@ export default function EarnScreen() {
             toast.success('Withdrawal complete', {
                 description: `${amount} mUSDC has been returned to your wallet.`,
             });
+            router.push(`/receipt?amount=${amount}&type=${encodeURIComponent('Withdrew from Vault')}&hash=${withdrawHash}`);
         } catch (error) {
             console.error('Withdraw failed:', error);
             toast.error('Withdrawal failed', {
@@ -159,6 +160,7 @@ export default function EarnScreen() {
             toast.success('Deposit successful!', {
                 description: `Successfully saved ${amount} mUSDC in the vault.`,
             });
+            router.push(`/receipt?amount=${amount}&type=${encodeURIComponent('Saved in Vault')}&hash=${depositHash}`);
         } catch (error) {
             console.error('Deposit flow failed:', error);
             toast.error('Deposit failed', {

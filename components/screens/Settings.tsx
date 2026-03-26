@@ -2,7 +2,7 @@
 
 import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Moon, Lock } from 'lucide-react';
 import Link from 'next/link';
-import { usePrivy } from '@/lib/mock-privy';
+import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 
 export default function SettingsScreen() {
