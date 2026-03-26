@@ -10,8 +10,12 @@ const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['lucide-react', '@privy-io/react-auth'],
   typescript: {
-    ignoreBuildErrors: true, // For demo purposes
-  }
+    ignoreBuildErrors: true, 
+  },
+  webpack: (config) => {
+    config.resolve.alias['@react-native-async-storage/async-storage'] = false;
+    return config;
+  },
 };
 
 module.exports = withPWA(nextConfig);
