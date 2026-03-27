@@ -8,14 +8,17 @@ Farsi is a premium mobile-first Decentralized Finance (DeFi) application built o
 
 In short, **Farsi is a smart money app for your phone.** 
 
-We built Farsi to bridge the gap between "hard-to-use" crypto and everyday life. Think of it like a modern banking app, but built on the next generation of tech. It’s designed for anyone who wants to grow their digital assets without needing a degree in computer science.
+We built Farsi to bridge the gap between "hard-to-use" crypto and everyday life. Think of it like a modern banking app, but built on the next generation of tech—**Flow EVM**. It’s designed for anyone who wants to grow their digital assets without needing a degree in computer science.
 
 ### **The Mission**
-Our mission is simple: **Financial freedom, simplified.** No seed phrases, no gas fees, just your money working for you.
+Our mission is simple: **Financial freedom, simplified.** No seed phrases, no complex gas management—just your money working for you on the most scalable consumer blockchain.
 
 ---
 
 ##  Core Features
+
+###  **On-Chain Proof (Verifiable Receipts)**
+Trust, but verify. Every action in Farsi—from saving to spending—generates a dynamic, high-fidelity receipt. These receipts are directly linked to **Flowscan**, providing users with instant, transparent proof of their transaction on the Flow EVM.
 
 ###  **Live Wallet**
 Stay on top of your assets. Our real-time wallet pulls directly from the **Flow EVM Testnet**, showing your live **mUSDC** and **FLOW** balances. Every transaction is block-synced and authentic.
@@ -89,10 +92,11 @@ npm run dev
 ---
 
 ## How to Demo
-1. **Get Funded**: Head to the **Earn** screen and tap the "Get 1000" button to get your test mUSDC.
-2. **Grow**: Deposit some funds into the vault to see your yield working.
-3. **Socialize**: Create a Social Pot for a "Summer Trip" and try contributing.
-4. **Spend**: Buy a Gift Card in the Spend screen and view your dynamic receipt!
+1. **Get Gas**: Head to the [**Flow EVM Testnet Faucet**](https://faucet.flow.org/evm) and enter your address (found in the app's Wallet or QR code). This is necessary for gas fees!
+2. **Get Funds**: Once you have gas, go to the **Earn** screen and tap the "Get 1000" button to get your test mUSDC.
+3. **Grow**: Deposit some funds into the vault to see your yield working.
+4. **Socialize**: Create a Social Pot for a "Summer Trip" and try contributing.
+5. **Spend**: Buy a Gift Card in the Spend screen and view your dynamic receipt!🎉🏎️💨
 
 ---
 
