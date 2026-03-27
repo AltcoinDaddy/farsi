@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider, createConfig, http } from 'wagmi';
+import { WagmiProvider, createConfig } from '@privy-io/wagmi';
+import { http } from 'wagmi';
 import { flowEVMTestnet } from '@/lib/web3-config';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { AuthGuard } from '@/components/AuthGuard';

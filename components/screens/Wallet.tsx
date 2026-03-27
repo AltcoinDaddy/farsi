@@ -11,7 +11,9 @@ import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 const TRANSFER_EVENT = parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)');
 
 export default function WalletScreen() {
-    const { address } = useAccount();
+    const { user } = usePrivy();
+    const { address: wagmiAddress } = useAccount();
+    const address = (user?.wallet?.address || wagmiAddress) as `0x${string}`;
     const publicClient = usePublicClient();
     const [transactions, setTransactions] = React.useState<any[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = React.useState(false);
@@ -157,7 +159,7 @@ export default function WalletScreen() {
                             <History size={12} /> Recent Activity
                         </h3>
                         <a
-                            href={`https://evm-testnet.flowscan.io/address/${address}`}
+                            href={address ? `https://evm-testnet.flowscan.io/address/${address}` : '#'}
                             target="_blank"
                             className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1 hover:underline"
                         >
