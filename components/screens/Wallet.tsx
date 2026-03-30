@@ -52,12 +52,16 @@ export default function WalletScreen() {
         const fetchLogs = async () => {
             setIsLoadingHistory(true);
             try {
+                // Flow EVM testnet log query limits to 10k blocks. 
+                const blockNumber = await publicClient.getBlockNumber();
+                const fromBlock = blockNumber > 9000n ? blockNumber - 9000n : 0n;
+
                 // Fetch outgoing transfers
                 const sentLogs = await publicClient.getLogs({
                     address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
                     event: TRANSFER_EVENT,
                     args: { from: address },
-                    fromBlock: 'earliest', // In production, limit this to last N blocks
+                    fromBlock,
                 });
 
                 // Fetch incoming transfers
@@ -65,7 +69,7 @@ export default function WalletScreen() {
                     address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
                     event: TRANSFER_EVENT,
                     args: { to: address },
-                    fromBlock: 'earliest',
+                    fromBlock,
                 });
 
                 const allLogs = [...sentLogs, ...receivedLogs]

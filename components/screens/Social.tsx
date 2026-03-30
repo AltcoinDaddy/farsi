@@ -36,9 +36,9 @@ export default function SocialScreen() {
     });
 
     const handleCreatePot = async () => {
-        if (!user?.smartWallet?.address || user?.wallet?.address || !potName || !potTarget) return;
+        if (!address || !potName || !potTarget) return;
         setIsUpdating(true);
-        const walletAddress = user.wallet.address as `0x${string}`;
+        const walletAddress = address as `0x${string}`;
 
         try {
             console.log('Creating new pot:', potName);
@@ -228,9 +228,10 @@ function PotCard({ address }: { address: string }) {
     });
 
     const handleContribute = async () => {
-        if (!user?.smartWallet?.address || user?.wallet?.address || !amount) return;
+        const actingAddress = user?.smartWallet?.address || user?.wallet?.address;
+        if (!actingAddress || !amount) return;
         setIsUpdating(true);
-        const walletAddress = user.wallet.address as `0x${string}`;
+        const walletAddress = actingAddress as `0x${string}`;
         const contributeAmount = parseUnits(amount, 18);
 
         try {

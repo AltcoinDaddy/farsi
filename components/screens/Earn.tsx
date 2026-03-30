@@ -63,10 +63,11 @@ export default function EarnScreen() {
     });
 
     const handleFaucet = async () => {
-        if (!user?.smartWallet?.address || user?.wallet?.address) return;
+        const address = user?.smartWallet?.address || user?.wallet?.address;
+        if (!address) return;
         setIsUpdating(true);
 
-        const walletAddress = user.wallet.address as `0x${string}`;
+        const walletAddress = address as `0x${string}`;
         try {
             console.log('Minting 1000 mUSDC...');
             const mintHash = await writeContractAsync({
@@ -93,10 +94,11 @@ export default function EarnScreen() {
     };
 
     const handleWithdraw = async () => {
-        if (!user?.smartWallet?.address || user?.wallet?.address || !amount) return;
+        const address = user?.smartWallet?.address || user?.wallet?.address;
+        if (!address || !amount) return;
         setIsUpdating(true);
 
-        const walletAddress = user.wallet.address as `0x${string}`;
+        const walletAddress = address as `0x${string}`;
         const withdrawAmount = parseUnits(amount, 18);
 
         try {
@@ -138,10 +140,11 @@ export default function EarnScreen() {
     const displayApy = currentApyBps ? (Number(currentApyBps) / 100).toFixed(1) : '4.5';
 
     const handleDeposit = async () => {
-        if (!user?.smartWallet?.address || user?.wallet?.address || !amount) return;
+        const address = user?.smartWallet?.address || user?.wallet?.address;
+        if (!address || !amount) return;
         setIsUpdating(true);
 
-        const walletAddress = user.wallet.address as `0x${string}`;
+        const walletAddress = address as `0x${string}`;
         const depositAmount = parseUnits(amount, 18);
 
         try {
