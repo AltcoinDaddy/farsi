@@ -7,6 +7,8 @@ import { http } from 'wagmi';
 import { flowEVMTestnet } from '@/lib/web3-config';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { AuthGuard } from '@/components/AuthGuard';
+import { ThemeProvider } from '@/lib/theme-context';
+import { NotificationProvider } from '@/lib/notification-context';
 
 const queryClient = new QueryClient();
 
@@ -20,7 +22,7 @@ export const wagmiConfig = createConfig({
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <PrivyProvider
-            appId="cmn7qmuq704sl0cl8omche88f"
+            appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || 'cmn7qmuq704sl0cl8omche88f'}
             config={{
                 appearance: {
                     theme: 'light',
@@ -38,9 +40,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
         >
             <QueryClientProvider client={queryClient}>
                 <WagmiProvider config={wagmiConfig}>
-                    <AuthGuard>
-                        {children}
-                    </AuthGuard>
+                    <ThemeProvider>
+                        <NotificationProvider>
+                            <AuthGuard>
+                                {children}
+                            </AuthGuard>
+                        </NotificationProvider>
+                    </ThemeProvider>
                 </WagmiProvider>
             </QueryClientProvider>
         </PrivyProvider>

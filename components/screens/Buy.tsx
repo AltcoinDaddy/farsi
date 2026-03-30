@@ -10,7 +10,7 @@ export default function BuyScreen() {
     const router = useRouter();
     const { user } = usePrivy();
     const { address: wagmiAddress } = useAccount();
-    const address = (user?.wallet?.address || wagmiAddress) as `0x${string}`;
+    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as `0x${string}`;
     const [usdAmount, setUsdAmount] = React.useState('100');
     const [showSimulation, setShowSimulation] = React.useState(false);
     const [simStep, setSimStep] = React.useState(0);
@@ -120,7 +120,7 @@ export default function BuyScreen() {
                     <div className="flex-1 min-w-0">
                         <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1">Deposit To</p>
                         <p className="text-xs font-black text-slate-900 truncate">
-                            {user?.wallet?.address || 'Connecting wallet...'}
+                            {user?.smartWallet?.address || user?.wallet?.address || 'Connecting wallet...'}
                         </p>
                     </div>
                 </div>

@@ -4,13 +4,15 @@ import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Moon, Lock
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
+import { useTheme } from '@/lib/theme-context';
 
 export default function SettingsScreen() {
     const { user, logout } = usePrivy();
     const router = useRouter();
+    const { theme, toggleTheme } = useTheme();
     const userEmail = user?.email?.address || 'No email linked';
     const userName = userEmail.split('@')[0] || 'User';
-    const userWallet = user?.wallet?.address || 'No wallet connected';
+    const userWallet = user?.smartWallet?.address || user?.wallet?.address || 'No wallet connected';
 
     const handleLogout = async () => {
         await logout();
@@ -30,7 +32,7 @@ export default function SettingsScreen() {
             items: [
                 { icon: Bell, label: 'Notifications', detail: 'On', color: 'text-orange-500', bg: 'bg-orange-50' },
                 { icon: Globe, label: 'Language', detail: 'English (US)', color: 'text-purple-500', bg: 'bg-purple-50' },
-                { icon: Moon, label: 'Appearance', detail: 'Light Mode', color: 'text-slate-500', bg: 'bg-slate-50' },
+                { icon: Moon, label: 'Appearance', detail: theme === 'dark' ? 'Dark Mode' : 'Light Mode', color: 'text-slate-500', bg: 'bg-slate-50', onClick: toggleTheme },
             ]
         },
         {
@@ -43,21 +45,21 @@ export default function SettingsScreen() {
     ];
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#F8F9FA]">
+        <div className="flex flex-col min-h-screen bg-[#F8F9FA] dark:bg-[#0F1117]">
             {/* Header */}
-            <header className="bg-white px-4 py-8 border-b border-slate-100 sticky top-0 z-10">
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">Settings</h1>
+            <header className="bg-white dark:bg-[#1A1D2E] px-4 py-8 border-b border-slate-100 dark:border-[#2D3348] sticky top-0 z-10">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Settings</h1>
             </header>
 
             <main className="flex-1 p-4 space-y-8 pb-32">
                 {/* Profile Snapshot */}
-                <div className="bg-white rounded-3xl p-6 border border-slate-100 flex items-center gap-4 shadow-sm">
+                <div className="bg-white dark:bg-[#1E2235] rounded-3xl p-6 border border-slate-100 dark:border-[#2D3348] flex items-center gap-4 shadow-sm">
                     <div className="size-16 rounded-full bg-slate-200 overflow-hidden">
                         <img src={`https://ui-avatars.com/api/?name=${userName}&background=4A90E2&color=fff`} alt="Profile" />
                     </div>
                     <div className="min-w-0 flex-1">
-                        <h2 className="text-lg font-bold text-slate-900 capitalize">{userName}</h2>
-                        <p className="text-xs text-slate-500 font-medium tracking-tight truncate">{userEmail}</p>
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-white capitalize">{userName}</h2>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium tracking-tight truncate">{userEmail}</p>
                     </div>
                 </div>
 
@@ -65,19 +67,23 @@ export default function SettingsScreen() {
                 {settingsGroups.map((group) => (
                     <div key={group.title} className="space-y-3">
                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-2">{group.title}</h3>
-                        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+                        <div className="bg-white dark:bg-[#1E2235] rounded-3xl border border-slate-100 dark:border-[#2D3348] overflow-hidden shadow-sm">
                             {group.items.map((item, i) => (
-                                <div key={item.label} className={`p-4 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer ${i !== group.items.length - 1 ? 'border-b border-slate-50' : ''}`}>
+                                <div 
+                                    key={item.label} 
+                                    onClick={item.onClick}
+                                    className={`p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-[#252A3A] transition-colors cursor-pointer ${i !== group.items.length - 1 ? 'border-b border-slate-50 dark:border-[#2D3348]' : ''}`}
+                                >
                                     <div className="flex items-center gap-4">
-                                        <div className={`size-10 rounded-2xl ${item.bg} ${item.color} flex items-center justify-center`}>
+                                        <div className={`size-10 rounded-2xl ${item.bg.replace('bg-', 'dark:bg-opacity-20 bg-')} ${item.color} flex items-center justify-center`}>
                                             <item.icon size={20} />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-slate-900">{item.label}</p>
-                                            {item.detail && <p className="text-[10px] text-slate-500 font-medium">{item.detail}</p>}
+                                            <p className="text-sm font-bold text-slate-900 dark:text-white">{item.label}</p>
+                                            {item.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{item.detail}</p>}
                                         </div>
                                     </div>
-                                    <ChevronRight size={16} className="text-slate-300" />
+                                    <ChevronRight size={16} className="text-slate-300 dark:text-slate-600" />
                                 </div>
                             ))}
                         </div>

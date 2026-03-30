@@ -4,19 +4,21 @@ import React from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { ChevronLeft, ArrowUpRight, Search, Wallet } from 'lucide-react';
 import Link from 'next/link';
-import { useWriteContract, useAccount, useReadContract, usePublicClient } from 'wagmi';
+import { useAccount, useReadContract, usePublicClient } from 'wagmi';
+import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { parseUnits, formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
-import { flowEVMTestnet, config } from '@/lib/web3-config';
+import { flowEVMTestnet } from '@/lib/web3-config';
+import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { toast } from 'sonner';
 
 export default function SendScreen() {
     const { user } = usePrivy();
     const { address: wagmiAddress } = useAccount();
-    const address = (user?.wallet?.address || wagmiAddress) as `0x${string}`;
-    const { writeContractAsync } = useWriteContract();
+    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as `0x${string}`;
+    const { writeContractAsync } = useSponsoredWriteContract();
     const [recipient, setRecipient] = React.useState('');
     const [amount, setAmount] = React.useState('');
     const [isUpdating, setIsUpdating] = React.useState(false);
@@ -43,7 +45,7 @@ export default function SendScreen() {
                 account: address as `0x${string}`,
                 chain: flowEVMTestnet,
             });
-            await waitForTransactionReceipt(config, { hash: transferHash });
+            await waitForTransactionReceipt(wagmiConfig, { hash: transferHash });
             await refetchUSDC();
             toast.success('Funds sent!', {
                 description: `Successfully sent ${amount} mUSDC to ${recipient.slice(0, 6)}...${recipient.slice(-4)}`,

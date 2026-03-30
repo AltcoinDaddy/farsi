@@ -86,7 +86,28 @@ function ReceiptContent({ withShare }: ReceiptProps) {
                         Done
                     </button>
                     {!withShare && (
-                        <button className="w-full py-5 bg-white border-2 border-slate-100 text-slate-900 font-black rounded-2xl hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <button 
+                            onClick={async () => {
+                                const txHash = searchParams.get('hash');
+                                const shareText = `✅ ${type} — ${amount} USDC on Flow EVM\n${txHash ? `View: https://evm-testnet.flowscan.io/tx/${txHash}` : ''}`;
+                                
+                                if (navigator.share) {
+                                    try {
+                                        await navigator.share({
+                                            title: 'Farsi Receipt',
+                                            text: shareText,
+                                        });
+                                    } catch (err) {
+                                        // User cancelled share
+                                    }
+                                } else {
+                                    await navigator.clipboard.writeText(shareText);
+                                    // Simple alert fallback since toast isn't imported
+                                    alert('Receipt copied to clipboard!');
+                                }
+                            }}
+                            className="w-full py-5 bg-white dark:bg-[#252A3A] border-2 border-slate-100 dark:border-[#2D3348] text-slate-900 dark:text-slate-200 font-black rounded-2xl hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
                             <span className="material-symbols-outlined !text-xl">share</span>
                             Share Receipt
                         </button>

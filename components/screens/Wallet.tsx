@@ -10,10 +10,26 @@ import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 
 const TRANSFER_EVENT = parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)');
 
+function timeAgo(date: number | Date) {
+    const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+    
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + 'y ago';
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + 'mo ago';
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + 'd ago';
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + 'h ago';
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + 'm ago';
+    return Math.floor(seconds) + 's ago';
+}
+
 export default function WalletScreen() {
     const { user } = usePrivy();
     const { address: wagmiAddress } = useAccount();
-    const address = (user?.wallet?.address || wagmiAddress) as `0x${string}`;
+    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as `0x${string}`;
     const publicClient = usePublicClient();
     const [transactions, setTransactions] = React.useState<any[]>([]);
     const [isLoadingHistory, setIsLoadingHistory] = React.useState(false);
@@ -56,7 +72,23 @@ export default function WalletScreen() {
                     .sort((a, b) => Number((b.blockNumber || 0n) - (a.blockNumber || 0n)))
                     .slice(0, 10); // Last 10 txs
 
-                setTransactions(allLogs);
+                // Fetch timestamps for the top 10 logs
+                const logsWithTime = await Promise.all(
+                    allLogs.map(async (log) => {
+                        let timestamp = Date.now();
+                        try {
+                            if (log.blockNumber) {
+                                const block = await publicClient.getBlock({ blockNumber: log.blockNumber });
+                                timestamp = Number(block.timestamp) * 1000;
+                            }
+                        } catch (e) {
+                            console.error('Failed to parse block time for', log.blockHash);
+                        }
+                        return { ...log, timestamp };
+                    })
+                );
+
+                setTransactions(logsWithTime);
             } catch (err) {
                 console.error('Failed to fetch transaction history:', err);
             } finally {
@@ -197,9 +229,19 @@ export default function WalletScreen() {
                                                 <p className="text-sm font-black text-slate-900 tracking-tight">
                                                     {isOutgoing ? 'Payment Sent' : 'Payment Received'}
                                                 </p>
-                                                <p className="text-[10px] font-bold text-slate-400 truncate w-32">
-                                                    {counterpart.slice(0, 6)}...{counterpart.slice(-4)}
-                                                </p>
+                                                <div className="flex items-center gap-1.5 mt-0.5">
+                                                    <p className="text-[10px] font-bold text-slate-400 truncate max-w-[120px]">
+                                                        {counterpart.slice(0, 6)}...{counterpart.slice(-4)}
+                                                    </p>
+                                                    {tx.timestamp && (
+                                                        <>
+                                                            <span className="size-0.5 bg-slate-300 rounded-full"></span>
+                                                            <p className="text-[10px] font-bold text-slate-400">
+                                                                {timeAgo(tx.timestamp)}
+                                                            </p>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="text-right">

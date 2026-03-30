@@ -1,13 +1,15 @@
 'use client';
 
 import React from 'react';
-import { useReadContract, useWriteContract, useAccount } from 'wagmi';
+import { useReadContract, useAccount } from 'wagmi';
+import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import SharedPotFactoryABI from '@/lib/abi/SharedPotFactory.json';
 import SharedPotABI from '@/lib/abi/SharedPot.json';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
 import { formatUnits, parseUnits } from 'viem';
-import { flowEVMTestnet, config } from '@/lib/web3-config';
+import { flowEVMTestnet } from '@/lib/web3-config';
+import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
@@ -19,8 +21,8 @@ export default function SocialScreen() {
     const router = useRouter();
     const { user } = usePrivy();
     const { address: wagmiAddress } = useAccount();
-    const address = (user?.wallet?.address || wagmiAddress) as `0x${string}`;
-    const { writeContractAsync } = useWriteContract();
+    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as `0x${string}`;
+    const { writeContractAsync } = useSponsoredWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [showModal, setShowModal] = React.useState(false);
     const [potName, setPotName] = React.useState('');
@@ -34,7 +36,7 @@ export default function SocialScreen() {
     });
 
     const handleCreatePot = async () => {
-        if (!user?.wallet?.address || !potName || !potTarget) return;
+        if (!user?.smartWallet?.address || user?.wallet?.address || !potName || !potTarget) return;
         setIsUpdating(true);
         const walletAddress = user.wallet.address as `0x${string}`;
 
@@ -48,7 +50,7 @@ export default function SocialScreen() {
                 account: walletAddress,
                 chain: flowEVMTestnet,
             });
-            await waitForTransactionReceipt(config, { hash: createHash });
+            await waitForTransactionReceipt(wagmiConfig, { hash: createHash });
             await refetchPots();
             setShowModal(false);
             setPotName('');
@@ -188,7 +190,7 @@ export default function SocialScreen() {
 function PotCard({ address }: { address: string }) {
     const router = useRouter();
     const { user } = usePrivy();
-    const { writeContractAsync } = useWriteContract();
+    const { writeContractAsync } = useSponsoredWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [amount, setAmount] = React.useState('10');
     const [showShareModal, setShowShareModal] = React.useState(false);
@@ -198,7 +200,7 @@ function PotCard({ address }: { address: string }) {
         address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
         abi: MockUSDCABI,
         functionName: 'allowance',
-        args: [user?.wallet?.address, address],
+        args: [user?.smartWallet?.address || user?.wallet?.address, address],
     });
 
     const { data: name } = useReadContract({
@@ -226,7 +228,7 @@ function PotCard({ address }: { address: string }) {
     });
 
     const handleContribute = async () => {
-        if (!user?.wallet?.address || !amount) return;
+        if (!user?.smartWallet?.address || user?.wallet?.address || !amount) return;
         setIsUpdating(true);
         const walletAddress = user.wallet.address as `0x${string}`;
         const contributeAmount = parseUnits(amount, 18);
@@ -244,7 +246,7 @@ function PotCard({ address }: { address: string }) {
                     account: walletAddress,
                     chain: flowEVMTestnet,
                 });
-                await waitForTransactionReceipt(config, { hash: approveHash });
+                await waitForTransactionReceipt(wagmiConfig, { hash: approveHash });
                 await refetchAllowance();
             }
 
@@ -258,7 +260,7 @@ function PotCard({ address }: { address: string }) {
                 account: walletAddress,
                 chain: flowEVMTestnet,
             });
-            await waitForTransactionReceipt(config, { hash: contributeHash });
+            await waitForTransactionReceipt(wagmiConfig, { hash: contributeHash });
 
             // Final refresh
             await refetchCurrent();
@@ -278,7 +280,7 @@ function PotCard({ address }: { address: string }) {
     };
 
     const handleWithdraw = async () => {
-        if (!user?.wallet?.address) return;
+        if (!user?.smartWallet?.address || user?.wallet?.address) return;
         setIsUpdating(true);
         const walletAddress = user.wallet.address as `0x${string}`;
 
@@ -291,7 +293,7 @@ function PotCard({ address }: { address: string }) {
                 account: walletAddress,
                 chain: flowEVMTestnet,
             });
-            await waitForTransactionReceipt(config, { hash: withdrawHash });
+            await waitForTransactionReceipt(wagmiConfig, { hash: withdrawHash });
             await refetchCurrent();
             toast.success('Funds claimed!', {
                 description: 'The pot savings have been transferred to your wallet.',
@@ -311,7 +313,7 @@ function PotCard({ address }: { address: string }) {
     const targetVal = target ? BigInt(target.toString()) : 0n;
     const currentVal = current ? BigInt(current.toString()) : 0n;
     const progress = targetVal > 0n ? Number((currentVal * 100n) / targetVal) : 0;
-    const isCreator = user?.wallet?.address && creator && user.wallet.address.toLowerCase() === (creator as string).toLowerCase();
+    const isCreator = user?.smartWallet?.address || user?.wallet?.address && creator && user.wallet.address.toLowerCase() === (creator as string).toLowerCase();
 
     // Generate a deep link for the pot (placeholder URL)
     const potLink = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}/social?address=${address}` : `https://farsi.app/social?address=${address}`;

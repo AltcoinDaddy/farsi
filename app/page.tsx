@@ -11,6 +11,15 @@ import MockUSDCABI from '@/lib/abi/MockUSDC.json';
 import { ArrowUpRight, ArrowDownLeft, History, Wallet, Sparkles, TrendingUp } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
+import { useNotifications } from '@/lib/notification-context';
+
+function timeAgo(date: Date): string {
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    return `${Math.floor(seconds / 86400)}d ago`;
+}
 
 const TRANSFER_EVENT = parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)');
 
@@ -19,9 +28,11 @@ import { QRCodeSVG } from 'qrcode.react';
 export default function DashboardPage() {
     const { user } = usePrivy();
     const { address: wagmiAddress } = useAccount();
-    const address = (user?.wallet?.address || wagmiAddress) as `0x${string}`;
+    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as `0x${string}`;
     const [showReceiveModal, setShowReceiveModal] = React.useState(false);
+    const [showNotifications, setShowNotifications] = React.useState(false);
     const [flowPrice, setFlowPrice] = React.useState<number | null>(null);
+    const { notifications, unreadCount, markAllRead } = useNotifications();
 
     const { data: balance, isLoading: isBalanceLoading } = useBalance({
         address: address,
@@ -131,8 +142,16 @@ export default function DashboardPage() {
                     </div>
                 </div>
                 <div className="flex gap-3">
-                    <button className="size-11 flex items-center justify-center rounded-2xl bg-white text-slate-400 border border-slate-100 shadow-sm hover:text-primary transition-colors">
+                    <button 
+                        onClick={() => { setShowNotifications(!showNotifications); if (!showNotifications) markAllRead(); }}
+                        className="size-11 flex items-center justify-center rounded-2xl bg-white dark:bg-[#252A3A] text-slate-400 border border-slate-100 dark:border-[#2D3348] shadow-sm hover:text-primary transition-colors relative"
+                    >
                         <span className="material-symbols-outlined text-2xl">notifications</span>
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 size-5 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center animate-pulse">
+                                {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                        )}
                     </button>
                     <button 
                         onClick={() => setShowReceiveModal(true)}
@@ -142,6 +161,44 @@ export default function DashboardPage() {
                     </button>
                 </div>
             </header>
+
+            {/* Notification Dropdown */}
+            {showNotifications && (
+                <div className="absolute top-20 right-4 left-4 z-[60] bg-white dark:bg-[#1E2235] rounded-[28px] shadow-2xl border border-slate-100 dark:border-[#2D3348] overflow-hidden animate-in slide-in-from-top-2 duration-300">
+                    <div className="p-5 border-b border-slate-100 dark:border-[#2D3348] flex items-center justify-between">
+                        <h3 className="text-sm font-black italic tracking-tight">Notifications</h3>
+                        <button onClick={() => setShowNotifications(false)} className="text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+                            <span className="material-symbols-outlined text-lg">close</span>
+                        </button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                            <div className="p-8 text-center">
+                                <span className="material-symbols-outlined text-3xl text-slate-200 dark:text-slate-600 mb-2">notifications_off</span>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No notifications yet</p>
+                            </div>
+                        ) : (
+                            notifications.slice(0, 8).map((n) => (
+                                <div key={n.id} className={`p-4 flex items-start gap-3 border-b border-slate-50 dark:border-[#252A3A] last:border-0 ${!n.read ? 'bg-primary/5' : ''}`}>
+                                    <div className={`size-9 rounded-xl flex items-center justify-center shrink-0 ${
+                                        n.type === 'success' ? 'bg-success/10 text-success' :
+                                        n.type === 'warning' ? 'bg-amber-50 text-amber-500' :
+                                        n.type === 'error' ? 'bg-red-50 text-red-500' :
+                                        'bg-primary/10 text-primary'
+                                    }`}>
+                                        <span className="material-symbols-outlined text-lg">{n.icon}</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-black tracking-tight">{n.title}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold truncate">{n.description}</p>
+                                        <p className="text-[9px] text-slate-300 font-bold mt-1">{timeAgo(n.timestamp)}</p>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
 
             <main className="flex-1 overflow-y-auto pb-28 px-6 pt-6 space-y-8">
                 {/* Total Balance Card */}

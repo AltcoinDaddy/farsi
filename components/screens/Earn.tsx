@@ -2,29 +2,33 @@
 
 import React from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { useReadContract, useWriteContract } from 'wagmi';
+import { useReadContract } from 'wagmi';
+import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import YieldVaultABI from '@/lib/abi/YieldVault.json';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
 import { formatUnits, parseUnits } from 'viem';
 import { useRouter } from 'next/navigation';
-import { flowEVMTestnet, config } from '@/lib/web3-config';
+import { flowEVMTestnet } from '@/lib/web3-config';
+import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { toast } from 'sonner';
+import { useNotifications } from '@/lib/notification-context';
 
 export default function EarnScreen() {
     const router = useRouter();
     const { user } = usePrivy();
-    const { writeContractAsync } = useWriteContract();
+    const { writeContractAsync } = useSponsoredWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [amount, setAmount] = React.useState('100');
+    const { addNotification } = useNotifications();
 
     // Fetch mUSDC balance
     const { data: usdcBalance, refetch: refetchUSDC } = useReadContract({
         address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
         abi: MockUSDCABI,
         functionName: 'balanceOf',
-        args: [user?.wallet?.address],
+        args: [user?.smartWallet?.address || user?.wallet?.address],
     });
 
     // Fetch Vault shares balance
@@ -32,7 +36,7 @@ export default function EarnScreen() {
         address: CONTRACT_ADDRESSES.YieldVault as `0x${string}`,
         abi: YieldVaultABI,
         functionName: 'balanceOf',
-        args: [user?.wallet?.address],
+        args: [user?.smartWallet?.address || user?.wallet?.address],
     });
 
     // Fetch USDC value of shares
@@ -43,16 +47,23 @@ export default function EarnScreen() {
         args: [vaultBalance || 0n],
     });
 
+    // Fetch dynamic APY
+    const { data: currentApyBps } = useReadContract({
+        address: CONTRACT_ADDRESSES.YieldVault as `0x${string}`,
+        abi: YieldVaultABI,
+        functionName: 'getCurrentAPY',
+    });
+
     // Fetch allowance
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
         address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
         abi: MockUSDCABI,
         functionName: 'allowance',
-        args: [user?.wallet?.address, CONTRACT_ADDRESSES.YieldVault],
+        args: [user?.smartWallet?.address || user?.wallet?.address, CONTRACT_ADDRESSES.YieldVault],
     });
 
     const handleFaucet = async () => {
-        if (!user?.wallet?.address) return;
+        if (!user?.smartWallet?.address || user?.wallet?.address) return;
         setIsUpdating(true);
 
         const walletAddress = user.wallet.address as `0x${string}`;
@@ -66,7 +77,7 @@ export default function EarnScreen() {
                 account: walletAddress,
                 chain: flowEVMTestnet,
             });
-            await waitForTransactionReceipt(config, { hash: mintHash });
+            await waitForTransactionReceipt(wagmiConfig, { hash: mintHash });
             await refetchUSDC();
             toast.success('Test funds received!', {
                 description: '1,000 mUSDC has been added to your wallet.',
@@ -82,7 +93,7 @@ export default function EarnScreen() {
     };
 
     const handleWithdraw = async () => {
-        if (!user?.wallet?.address || !amount) return;
+        if (!user?.smartWallet?.address || user?.wallet?.address || !amount) return;
         setIsUpdating(true);
 
         const walletAddress = user.wallet.address as `0x${string}`;
@@ -99,10 +110,16 @@ export default function EarnScreen() {
                 account: walletAddress,
                 chain: flowEVMTestnet,
             });
-            await waitForTransactionReceipt(config, { hash: withdrawHash });
+            await waitForTransactionReceipt(wagmiConfig, { hash: withdrawHash });
             await Promise.all([refetchVault(), refetchUSDC(), refetchAllowance()]);
             toast.success('Withdrawal complete', {
                 description: `${amount} mUSDC has been returned to your wallet.`,
+            });
+            addNotification({
+                title: 'Withdrawal Complete',
+                description: `Withdrew ${amount} mUSDC from YieldVault`,
+                type: 'success',
+                icon: 'account_balance_wallet'
             });
             router.push(`/receipt?amount=${amount}&type=${encodeURIComponent('Withdrew from Vault')}&hash=${withdrawHash}`);
         } catch (error) {
@@ -118,9 +135,10 @@ export default function EarnScreen() {
     const formattedUSDC = usdcBalance ? parseFloat(formatUnits(usdcBalance as bigint, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
     const formattedVault = assetsValue ? parseFloat(formatUnits(assetsValue as bigint, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
     const vaultShares = vaultBalance ? parseFloat(formatUnits(vaultBalance as bigint, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
+    const displayApy = currentApyBps ? (Number(currentApyBps) / 100).toFixed(1) : '4.5';
 
     const handleDeposit = async () => {
-        if (!user?.wallet?.address || !amount) return;
+        if (!user?.smartWallet?.address || user?.wallet?.address || !amount) return;
         setIsUpdating(true);
 
         const walletAddress = user.wallet.address as `0x${string}`;
@@ -139,7 +157,7 @@ export default function EarnScreen() {
                     account: walletAddress,
                     chain: flowEVMTestnet,
                 });
-                await waitForTransactionReceipt(config, { hash: approveHash });
+                await waitForTransactionReceipt(wagmiConfig, { hash: approveHash });
                 await refetchAllowance();
             }
 
@@ -153,12 +171,18 @@ export default function EarnScreen() {
                 account: walletAddress,
                 chain: flowEVMTestnet,
             });
-            await waitForTransactionReceipt(config, { hash: depositHash });
+            await waitForTransactionReceipt(wagmiConfig, { hash: depositHash });
 
             // Final refresh
             await Promise.all([refetchUSDC(), refetchVault()]);
             toast.success('Deposit successful!', {
                 description: `Successfully saved ${amount} mUSDC in the vault.`,
+            });
+            addNotification({
+                title: 'Deposit Successful',
+                description: `Saved ${amount} mUSDC in YieldVault`,
+                type: 'success',
+                icon: 'savings'
             });
             router.push(`/receipt?amount=${amount}&type=${encodeURIComponent('Saved in Vault')}&hash=${depositHash}`);
         } catch (error) {
@@ -172,11 +196,11 @@ export default function EarnScreen() {
     };
 
     return (
-        <div className="bg-white text-neutral-dark min-h-screen flex flex-col p-4 space-y-6">
+        <div className="bg-white dark:bg-[#1A1D2E] text-neutral-dark min-h-screen flex flex-col p-4 space-y-6">
             <header className="flex justify-between items-center mb-2">
                 <div>
-                    <h1 className="text-2xl font-bold text-neutral-dark">Earn Yield</h1>
-                    <p className="text-sm text-neutral-muted">Put your assets to work</p>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Earn Yield</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Put your assets to work</p>
                 </div>
                 <div className="w-10 h-10 bg-success-light rounded-full flex items-center justify-center text-success">
                     <span className="material-symbols-outlined">payments</span>
@@ -193,7 +217,7 @@ export default function EarnScreen() {
                 <div className="flex gap-4 border-t border-white/20 pt-4">
                     <div>
                         <p className="text-success-light/60 text-[10px] uppercase font-bold">Estimated APY</p>
-                        <p className="font-bold text-sm">4.5%*</p>
+                        <p className="font-bold text-sm">{displayApy}%*</p>
                     </div>
                     <div className="flex-1">
                         <p className="text-success-light/60 text-[10px] uppercase font-bold text-right">Shares Balance</p>
@@ -214,7 +238,7 @@ export default function EarnScreen() {
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="0.00"
-                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-6 text-3xl font-black text-slate-900 focus:border-primary outline-none transition-all pr-24"
+                        className="w-full bg-slate-50 dark:bg-[#151825] border-2 border-slate-100 dark:border-[#2D3348] rounded-3xl p-6 text-3xl font-black text-slate-900 dark:text-white focus:border-primary outline-none transition-all pr-24"
                     />
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-slate-400">
                         mUSDC
@@ -225,7 +249,7 @@ export default function EarnScreen() {
                         <button
                             key={val}
                             onClick={() => setAmount(val)}
-                            className="bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+                            className="bg-slate-50 dark:bg-[#151825] border border-slate-100 dark:border-[#2D3348] px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1E2235] transition-colors"
                         >
                             ${val}
                         </button>
@@ -246,7 +270,7 @@ export default function EarnScreen() {
                 <button
                     onClick={handleWithdraw}
                     disabled={isUpdating || !amount || parseFloat(amount) <= 0 || !vaultBalance || (vaultBalance as bigint) === 0n}
-                    className="bg-slate-100 text-slate-900 py-5 rounded-3xl font-black text-lg hover:bg-slate-200 transition-all disabled:opacity-50 active:scale-95"
+                    className="bg-slate-100 dark:bg-[#1E2235] text-slate-900 dark:text-white py-5 rounded-3xl font-black text-lg hover:bg-slate-200 dark:hover:bg-[#252A3A] transition-all disabled:opacity-50 active:scale-95 border border-transparent dark:border-[#2D3348]"
                 >
                     Withdraw
                 </button>
@@ -262,13 +286,13 @@ export default function EarnScreen() {
             {/* Strategy Info */}
             <div className="flex-1 pb-12">
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Vault Details</h3>
-                <div className="bg-slate-50 rounded-2xl p-4 space-y-4 border border-slate-100">
+                <div className="bg-slate-50 dark:bg-[#151825] rounded-2xl p-4 space-y-4 border border-slate-100 dark:border-[#2D3348]">
                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-500 font-medium">Protocol Standard</span>
-                        <span className="font-bold text-slate-900 italic tracking-tight">ERC-4626</span>
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Protocol Standard</span>
+                        <span className="font-bold text-slate-900 dark:text-white italic tracking-tight">ERC-4626</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-500 font-medium">Risk Profile</span>
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Risk Profile</span>
                         <span className="font-bold text-success flex items-center gap-1">
                             Minimal Risk
                         </span>

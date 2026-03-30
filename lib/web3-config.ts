@@ -1,4 +1,3 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { Chain } from 'viem';
 
 /**
@@ -23,15 +22,3 @@ export const flowEVMTestnet = {
     testnet: true,
 } as const;
 
-export const config = getDefaultConfig({
-    appName: 'Farsi DeFi',
-    projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID || 'your-project-id',
-    chains: [flowEVMTestnet],
-    ssr: true,
-});
-
-export const CONTRACT_ADDRESSES = {
-    MUSDC: '0x63F28bF688e38429E4123503cdba1A9237aAe8B9',
-    YIELD_VAULT: '0x8DF0868e0f0c00C73e2315C74D6CFaD42Db4bBD2',
-    POT_FACTORY: '0x77326e1532e97f9022D15a5D1d186e196c853abC',
-};

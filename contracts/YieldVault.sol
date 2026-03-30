@@ -7,20 +7,32 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title YieldVault
- * @dev Implementation of an ERC-4626 vault for Farsi.
+ * @dev Implementation of an ERC-4626 vault for Farsi with simulated yield.
  * Allows users to deposit USDC (or equivalent) to earn yield.
- * This is a simplified version suitable for Flow EVM hackathon demo.
+ * Yield is simulated via a time-based bonus on totalAssets().
  */
 contract YieldVault is ERC4626, Ownable, ReentrancyGuard {
+    uint256 public deployTimestamp;
+    
+    /// @dev Annual yield rate in basis points (450 = 4.5%)
+    uint256 public annualYieldBps = 450;
+    
+    /// @dev Bonus yield injected by owner for demo purposes
+    uint256 public bonusYield;
+
+    event YieldInjected(uint256 amount, uint256 totalBonus);
+    event YieldRateUpdated(uint256 newRateBps);
+
     constructor(IERC20 asset, string memory name, string memory symbol) 
         ERC4626(asset) 
         ERC20(name, symbol) 
         Ownable(msg.sender)
-    {}
+    {
+        deployTimestamp = block.timestamp;
+    }
 
     /**
      * @dev Deposit tokens and receive shares.
-     * Modified to include Farsi-specific logging or sponsored tx checks.
      */
     function deposit(uint256 assets, address receiver) public override nonReentrant returns (uint256) {
         return super.deposit(assets, receiver);
@@ -34,11 +46,44 @@ contract YieldVault is ERC4626, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Simulated yield generation for the hackathon demo.
-     * In production, this would integrate with a real lending protocol.
+     * @dev Returns total assets including simulated time-based yield.
+     * Combines real balance + time-based yield + any bonus injected by owner.
+     * In production, this would come from a real lending protocol.
      */
     function totalAssets() public view override returns (uint256) {
-        // Simplified: return real balance + virtual yield for demo
-        return super.totalAssets();
+        uint256 realBalance = super.totalAssets();
+        if (realBalance == 0) return bonusYield;
+        
+        // Calculate time-based simulated yield
+        uint256 elapsed = block.timestamp - deployTimestamp;
+        // yield = balance * rate * elapsed / (365 days * 10000)
+        uint256 simulatedYield = (realBalance * annualYieldBps * elapsed) / (365 days * 10000);
+        
+        return realBalance + simulatedYield + bonusYield;
+    }
+
+    /**
+     * @dev Owner can inject bonus yield for demo purposes.
+     * This simulates protocol revenue being distributed to the vault.
+     */
+    function injectYield(uint256 amount) external onlyOwner {
+        bonusYield += amount;
+        emit YieldInjected(amount, bonusYield);
+    }
+
+    /**
+     * @dev Owner can update the annual yield rate (in basis points).
+     */
+    function setYieldRate(uint256 newRateBps) external onlyOwner {
+        require(newRateBps <= 5000, "Rate too high"); // Max 50%
+        annualYieldBps = newRateBps;
+        emit YieldRateUpdated(newRateBps);
+    }
+
+    /**
+     * @dev View helper: get current simulated APY in basis points.
+     */
+    function getCurrentAPY() external view returns (uint256) {
+        return annualYieldBps;
     }
 }

@@ -4,11 +4,13 @@ import React from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { ChevronLeft, ShoppingBag, Wifi, Car, Coffee, MoreHorizontal, Wallet } from 'lucide-react';
 import Link from 'next/link';
-import { useWriteContract, useAccount, useReadContract, usePublicClient } from 'wagmi';
+import { useAccount, useReadContract, usePublicClient } from 'wagmi';
+import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { parseUnits, formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
-import { flowEVMTestnet, config } from '@/lib/web3-config';
+import { flowEVMTestnet } from '@/lib/web3-config';
+import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -19,8 +21,8 @@ export default function SpendScreen() {
     const router = useRouter();
     const { user } = usePrivy();
     const { address: wagmiAddress } = useAccount();
-    const address = (user?.wallet?.address || wagmiAddress) as `0x${string}`;
-    const { writeContractAsync } = useWriteContract();
+    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as `0x${string}`;
+    const { writeContractAsync } = useSponsoredWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [autoSave, setAutoSave] = React.useState(true);
 
@@ -57,7 +59,7 @@ export default function SpendScreen() {
                 account: address as `0x${string}`,
                 chain: flowEVMTestnet,
             });
-            await waitForTransactionReceipt(config, { hash: buyHash });
+            await waitForTransactionReceipt(wagmiConfig, { hash: buyHash });
 
             // 2. Optional Auto-Save Round Up
             let changeAmount = 0;
@@ -78,7 +80,7 @@ export default function SpendScreen() {
                             account: address as `0x${string}`,
                             chain: flowEVMTestnet,
                         });
-                        await waitForTransactionReceipt(config, { hash: appHash });
+                        await waitForTransactionReceipt(wagmiConfig, { hash: appHash });
                     }
 
                     // Deposit to Vault
@@ -90,7 +92,7 @@ export default function SpendScreen() {
                         account: address as `0x${string}`,
                         chain: flowEVMTestnet,
                     });
-                    await waitForTransactionReceipt(config, { hash: depositHash });
+                    await waitForTransactionReceipt(wagmiConfig, { hash: depositHash });
                     
                     toast.success('Round-up Auto-Saved!', {
                         description: `Saved $${changeAmount.toFixed(2)} to your Yield Vault.`,

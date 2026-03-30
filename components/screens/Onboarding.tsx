@@ -79,7 +79,7 @@ export default function Onboarding() {
                         </p>
                         <div className="bg-background-light p-4 rounded-xl border border-gray-100">
                             <p className="text-[10px] uppercase font-bold text-neutral-muted mb-1">Your Smart Account</p>
-                            <p className="text-xs font-mono text-neutral-dark truncate">{user?.wallet?.address}</p>
+                            <p className="text-xs font-mono text-neutral-dark truncate">{user?.smartWallet?.address || user?.wallet?.address}</p>
                         </div>
                         <button onClick={() => setStep(3)} className="w-full bg-primary text-white font-bold py-4 rounded-xl mt-8 shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all">
                             Finalize Profile
