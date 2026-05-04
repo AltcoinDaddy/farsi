@@ -38,3 +38,6 @@ artifacts
 cache
 typechain
 typechain-types
+
+# local planning
+TASKS.md
