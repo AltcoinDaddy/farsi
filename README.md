@@ -82,7 +82,10 @@ NEXT_PUBLIC_WC_PROJECT_ID=your_id
 NEXT_PUBLIC_PRIVY_APP_ID=your_id
 NEXT_PUBLIC_ZERODEV_PROJECT_ID=your_id
 NEXT_PUBLIC_FLOW_RPC=https://testnet.evm.nodes.onflow.org
+FAUCET_PRIVATE_KEY=your_contract_owner_private_key
 ```
+
+`FAUCET_PRIVATE_KEY` is optional for general app usage, but it is required if you want the in-app `Get Test Funds` faucet on the Earn screen to mint test mUSDC for regular users.
 
 ### 4. Run
 ```bash
@@ -99,4 +102,3 @@ npm run dev
 5. **Spend**: Buy a Gift Card in the Spend screen and view your dynamic receipt!🎉🏎️💨
 
 ---
-
