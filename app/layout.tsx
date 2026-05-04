@@ -10,27 +10,26 @@ export const metadata = {
     manifest: '/manifest.json',
 };
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
 export default function RootLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en">
-            <head>
-                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-                <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-            </head>
+        <html lang="en" suppressHydrationWarning>
             <body className="bg-[#F8F9FA] dark:bg-[#0F1117] text-[#1A1A1A] dark:text-[#E2E8F0] antialiased">
-                <Providers>
-                    <Toaster position="top-center" richColors />
-                    <div className="flex flex-col min-h-screen max-w-[480px] mx-auto bg-white dark:bg-[#1A1D2E] shadow-xl relative overflow-hidden">
-                        <main className="flex-1 overflow-y-auto pb-24">
-                            {children}
-                        </main>
-                        <Navigation />
-                    </div>
-                </Providers>
+                <ErrorBoundary>
+                    <Providers>
+                        <div className="flex flex-col min-h-screen max-w-[480px] mx-auto bg-white dark:bg-[#1A1D2E] shadow-xl relative overflow-hidden">
+                            <main className="flex-1 overflow-y-auto pb-24">
+                                {children}
+                            </main>
+                            <Navigation />
+                        </div>
+                    </Providers>
+                </ErrorBoundary>
             </body>
         </html>
     );

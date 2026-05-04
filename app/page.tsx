@@ -64,7 +64,8 @@ export default function DashboardPage() {
         address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
         abi: MockUSDCABI,
         functionName: 'balanceOf',
-        args: [address],
+        args: address ? [address] : undefined,
+        query: { enabled: !!address },
     });
 
     // Fetch Vault shares balance to see if they HAVE yield
@@ -72,7 +73,8 @@ export default function DashboardPage() {
         address: CONTRACT_ADDRESSES.YieldVault as `0x${string}`,
         abi: YieldVaultABI,
         functionName: 'balanceOf',
-        args: [address],
+        args: address ? [address] : undefined,
+        query: { enabled: !!address },
     });
 
     // Fetch recent mUSDC transfers (same logic as Wallet.tsx)
@@ -127,9 +129,9 @@ export default function DashboardPage() {
     };
 
     return (
-        <div className="bg-[#F8F9FA] text-slate-900 min-h-screen flex flex-col font-sans">
+        <div className="text-slate-900 font-sans pb-6">
             {/* Header */}
-            <header className="bg-white px-6 pt-8 pb-6 flex items-center justify-between border-b border-slate-100">
+            <header className="px-6 pt-8 pb-6 flex items-center justify-between border-b border-slate-100">
                 <div className="flex items-center gap-4">
                     <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-sm overflow-hidden group">
                         <div className="size-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center text-primary font-black text-xl uppercase italic group-hover:scale-110 transition-transform">
@@ -200,7 +202,7 @@ export default function DashboardPage() {
                 </div>
             )}
 
-            <main className="flex-1 overflow-y-auto pb-28 px-6 pt-6 space-y-8">
+            <div className="px-6 pt-6 space-y-8">
                 {/* Total Balance Card */}
                 <div className="relative group">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-blue-600 rounded-[34px] blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
@@ -400,7 +402,7 @@ export default function DashboardPage() {
                         )}
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider, createConfig } from '@privy-io/wagmi';
 import { http } from 'wagmi';
@@ -10,8 +10,6 @@ import { AuthGuard } from '@/components/AuthGuard';
 import { ThemeProvider } from '@/lib/theme-context';
 import { NotificationProvider } from '@/lib/notification-context';
 
-const queryClient = new QueryClient();
-
 export const wagmiConfig = createConfig({
     chains: [flowEVMTestnet],
     transports: {
@@ -20,6 +18,13 @@ export const wagmiConfig = createConfig({
 });
 
 export function Providers({ children }: { children: React.ReactNode }) {
+    const [queryClient] = useState(() => new QueryClient());
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     return (
         <PrivyProvider
             appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || 'cmn7qmuq704sl0cl8omche88f'}
@@ -39,15 +44,21 @@ export function Providers({ children }: { children: React.ReactNode }) {
             }}
         >
             <QueryClientProvider client={queryClient}>
-                <WagmiProvider config={wagmiConfig}>
-                    <ThemeProvider>
-                        <NotificationProvider>
-                            <AuthGuard>
-                                {children}
-                            </AuthGuard>
-                        </NotificationProvider>
-                    </ThemeProvider>
-                </WagmiProvider>
+                {isMounted ? (
+                    <WagmiProvider config={wagmiConfig}>
+                        <ThemeProvider>
+                            <NotificationProvider>
+                                <AuthGuard>
+                                    {children}
+                                </AuthGuard>
+                            </NotificationProvider>
+                        </ThemeProvider>
+                    </WagmiProvider>
+                ) : (
+                    <div className="min-h-screen bg-white flex items-center justify-center">
+                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                )}
             </QueryClientProvider>
         </PrivyProvider>
     );
