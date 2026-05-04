@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { useReadContract } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import YieldVaultABI from '@/lib/abi/YieldVault.json';
@@ -18,17 +18,22 @@ import { useNotifications } from '@/lib/notification-context';
 export default function EarnScreen() {
     const router = useRouter();
     const { user } = usePrivy();
+    const { address: wagmiAddress } = useAccount();
     const { writeContractAsync } = useSponsoredWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [amount, setAmount] = React.useState('100');
     const { addNotification } = useNotifications();
+    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as
+        | `0x${string}`
+        | undefined;
 
     // Fetch mUSDC balance
     const { data: usdcBalance, refetch: refetchUSDC } = useReadContract({
         address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
         abi: MockUSDCABI,
         functionName: 'balanceOf',
-        args: [user?.smartWallet?.address || user?.wallet?.address],
+        args: address ? [address] : undefined,
+        query: { enabled: !!address },
     });
 
     // Fetch Vault shares balance
@@ -36,7 +41,8 @@ export default function EarnScreen() {
         address: CONTRACT_ADDRESSES.YieldVault as `0x${string}`,
         abi: YieldVaultABI,
         functionName: 'balanceOf',
-        args: [user?.smartWallet?.address || user?.wallet?.address],
+        args: address ? [address] : undefined,
+        query: { enabled: !!address },
     });
 
     // Fetch USDC value of shares
@@ -59,34 +65,48 @@ export default function EarnScreen() {
         address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
         abi: MockUSDCABI,
         functionName: 'allowance',
-        args: [user?.smartWallet?.address || user?.wallet?.address, CONTRACT_ADDRESSES.YieldVault],
+        args: address ? [address, CONTRACT_ADDRESSES.YieldVault] : undefined,
+        query: { enabled: !!address },
     });
 
     const handleFaucet = async () => {
-        const address = user?.smartWallet?.address || user?.wallet?.address;
         if (!address) return;
         setIsUpdating(true);
 
-        const walletAddress = address as `0x${string}`;
         try {
-            console.log('Minting 1000 mUSDC...');
-            const mintHash = await writeContractAsync({
-                address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-                abi: MockUSDCABI,
-                functionName: 'mint',
-                args: [walletAddress, parseUnits('1000', 18)],
-                account: walletAddress,
-                chain: flowEVMTestnet,
+            const response = await fetch('/api/faucet', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ address }),
             });
-            await waitForTransactionReceipt(wagmiConfig, { hash: mintHash });
+
+            const data = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                throw new Error(
+                    data?.message || 'The faucet request could not be completed.'
+                );
+            }
+
             await refetchUSDC();
             toast.success('Test funds received!', {
-                description: '1,000 mUSDC has been added to your wallet.',
+                description: data?.message || '1,000 mUSDC has been added to your wallet.',
+            });
+            addNotification({
+                title: 'Test Funds Added',
+                description: '1,000 mUSDC is now available in your wallet',
+                type: 'success',
+                icon: 'water_drop'
             });
         } catch (error) {
             console.error('Faucet failed:', error);
             toast.error('Faucet failed', {
-                description: 'Please try again later or check your network.',
+                description:
+                    error instanceof Error
+                        ? error.message
+                        : 'Please try again later or check your network.',
             });
         } finally {
             setIsUpdating(false);
@@ -94,11 +114,9 @@ export default function EarnScreen() {
     };
 
     const handleWithdraw = async () => {
-        const address = user?.smartWallet?.address || user?.wallet?.address;
         if (!address || !amount) return;
         setIsUpdating(true);
 
-        const walletAddress = address as `0x${string}`;
         const withdrawAmount = parseUnits(amount, 18);
 
         try {
@@ -108,8 +126,8 @@ export default function EarnScreen() {
                 address: CONTRACT_ADDRESSES.YieldVault as `0x${string}`,
                 abi: YieldVaultABI,
                 functionName: 'withdraw',
-                args: [withdrawAmount, walletAddress, walletAddress],
-                account: walletAddress,
+                args: [withdrawAmount, address, address],
+                account: address,
                 chain: flowEVMTestnet,
             });
             await waitForTransactionReceipt(wagmiConfig, { hash: withdrawHash });
@@ -140,11 +158,9 @@ export default function EarnScreen() {
     const displayApy = currentApyBps ? (Number(currentApyBps) / 100).toFixed(1) : '4.5';
 
     const handleDeposit = async () => {
-        const address = user?.smartWallet?.address || user?.wallet?.address;
         if (!address || !amount) return;
         setIsUpdating(true);
 
-        const walletAddress = address as `0x${string}`;
         const depositAmount = parseUnits(amount, 18);
 
         try {
@@ -157,7 +173,7 @@ export default function EarnScreen() {
                     abi: MockUSDCABI,
                     functionName: 'approve',
                     args: [CONTRACT_ADDRESSES.YieldVault, parseUnits('10000', 18)], // Approve a larger amount for better UX
-                    account: walletAddress,
+                    account: address,
                     chain: flowEVMTestnet,
                 });
                 await waitForTransactionReceipt(wagmiConfig, { hash: approveHash });
@@ -170,8 +186,8 @@ export default function EarnScreen() {
                 address: CONTRACT_ADDRESSES.YieldVault as `0x${string}`,
                 abi: YieldVaultABI,
                 functionName: 'deposit',
-                args: [depositAmount, walletAddress],
-                account: walletAddress,
+                args: [depositAmount, address],
+                account: address,
                 chain: flowEVMTestnet,
             });
             await waitForTransactionReceipt(wagmiConfig, { hash: depositHash });
@@ -259,13 +275,16 @@ export default function EarnScreen() {
                     ))}
                     <button
                         onClick={handleFaucet}
-                        disabled={isUpdating}
+                        disabled={isUpdating || !address}
                         className="ml-auto text-[11px] font-bold text-primary flex items-center gap-1 hover:opacity-70 disabled:opacity-50"
                     >
                         <span className="material-symbols-outlined text-[16px]">water_drop</span>
                         Get Test Funds
                     </button>
                 </div>
+                <p className="text-[10px] text-slate-400 font-medium px-1">
+                    Demo faucet adds 1,000 mUSDC to your current wallet when the server faucet key is configured.
+                </p>
             </div>
 
             {/* Action Buttons */}
