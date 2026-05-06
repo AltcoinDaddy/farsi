@@ -101,6 +101,14 @@ html.dark .text-\[#1A1A1A\] {
   color: #E2E8F0;
 }
 
+html.dark .text-neutral-dark {
+  color: #E2E8F0;
+}
+
+html.dark .text-neutral-muted {
+  color: #94A3B8;
+}
+
 html.dark .bg-\[#1A1A1A\] {
   background-color: #0D0F18;
 }

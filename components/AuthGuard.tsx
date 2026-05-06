@@ -8,6 +8,12 @@ import { useMiniPay } from '@/lib/minipay';
 
 const ONBOARDING_ROUTE = '/onboarding';
 const ONBOARDING_STORAGE_KEY = 'farsi_onboarded';
+const PREVIEW_SESSION_KEY = 'farsi_preview_session';
+
+function canUsePreviewSession() {
+    if (typeof window === 'undefined') return false;
+    return process.env.NODE_ENV !== 'production' || window.location.hostname === 'localhost';
+}
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -17,10 +23,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const { isMiniPay } = useMiniPay();
     const [isMounted, setIsMounted] = React.useState(false);
     const [hasCompletedOnboarding, setHasCompletedOnboarding] = React.useState(false);
+    const [hasPreviewSession, setHasPreviewSession] = React.useState(false);
 
     const isOnboardingRoute = pathname === ONBOARDING_ROUTE;
     const hasWalletSession = !!address;
-    const hasIdentitySession = authenticated || hasWalletSession;
+    const hasIdentitySession = authenticated || hasWalletSession || hasPreviewSession;
     const identityReady = isMiniPay ? true : ready;
 
     useEffect(() => {
@@ -31,6 +38,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         if (!isMounted) return;
         setHasCompletedOnboarding(
             window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true'
+        );
+        setHasPreviewSession(
+            canUsePreviewSession() &&
+                window.localStorage.getItem(PREVIEW_SESSION_KEY) === 'true'
         );
     }, [isMounted, pathname]);
 
