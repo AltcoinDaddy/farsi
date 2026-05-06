@@ -50,6 +50,28 @@ function MiniPayAutoConnect(): null {
     return null;
 }
 
+function DevServiceWorkerReset(): null {
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (process.env.NODE_ENV === 'production') return;
+        if (!('serviceWorker' in navigator)) return;
+
+        const clearLocalPwaState = async () => {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map((registration) => registration.unregister()));
+
+            if ('caches' in window) {
+                const cacheKeys = await window.caches.keys();
+                await Promise.all(cacheKeys.map((cacheKey) => window.caches.delete(cacheKey)));
+            }
+        };
+
+        void clearLocalPwaState();
+    }, []);
+
+    return null;
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient());
     const [isMounted, setIsMounted] = useState(false);
@@ -79,6 +101,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <QueryClientProvider client={queryClient}>
                 {isMounted ? (
                     <WagmiProvider config={wagmiConfig}>
+                        <DevServiceWorkerReset />
                         <MiniPayAutoConnect />
                         <ThemeProvider>
                             <NotificationProvider>
