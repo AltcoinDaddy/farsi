@@ -110,7 +110,7 @@ export default function SpendScreen() {
                     await waitForTransactionReceipt(wagmiConfig, { hash: depositHash });
                     
                     toast.success('Round-up Auto-Saved!', {
-                        description: `Saved $${changeAmount.toFixed(2)} to your Yield Vault.`,
+                        description: `Saved $${changeAmount.toFixed(2)} to your savings balance.`,
                         icon: <span className="material-symbols-outlined text-success">auto_awesome</span>
                     });
                 }
@@ -235,7 +235,7 @@ export default function SpendScreen() {
                         <div className="bg-success/5 rounded-2xl p-4 flex items-center gap-3 border border-success/10 animate-in slide-in-from-top-2 duration-300">
                             <span className="material-symbols-outlined text-success text-sm">info</span>
                             <p className="text-[9px] font-black text-success uppercase tracking-widest leading-relaxed">
-                                Change is auto-deposited into your <span className="underline italic">savings vault</span> at 4.2% APY.
+                                Change is auto-deposited into your <span className="underline italic">savings balance</span> using the current demo growth model.
                             </p>
                         </div>
                     )}

@@ -1,5 +1,5 @@
-import EarnScreen from '@/components/screens/Earn';
+import { redirect } from 'next/navigation';
 
 export default function EarnPage() {
-    return <EarnScreen />;
+    redirect('/save');
 }

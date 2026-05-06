@@ -263,7 +263,7 @@ export default function DashboardPage() {
                         </span>}
                     </div>
                     
-                    <Link href="/earn" className={`relative rounded-3xl p-6 flex items-center justify-between border transition-all active:scale-[0.98] group overflow-hidden ${hasYield ? 'bg-success/5 border-success/10' : 'bg-primary/5 border-primary/10'}`}>
+                    <Link href="/save" className={`relative rounded-3xl p-6 flex items-center justify-between border transition-all active:scale-[0.98] group overflow-hidden ${hasYield ? 'bg-success/5 border-success/10' : 'bg-primary/5 border-primary/10'}`}>
                         <div className="flex items-center gap-5 relative z-10">
                             <div className={`size-14 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform ${hasYield ? 'bg-white text-success' : 'bg-white text-primary'}`}>
                                 <span className="material-symbols-outlined text-3xl material-symbols-filled">
@@ -272,10 +272,10 @@ export default function DashboardPage() {
                             </div>
                             <div>
                                 <h4 className={`text-sm font-black italic tracking-tight ${hasYield ? 'text-success' : 'text-primary'}`}>
-                                    {hasYield ? 'Your savings are active' : 'Start Earning Yield'}
+                                    {hasYield ? 'Your savings are active' : 'Start Saving'}
                                 </h4>
                                 <p className="text-xs font-bold text-slate-500">
-                                    {hasYield ? 'Vault assets are working for you' : 'Put your idle cUSD to work'}
+                                    {hasYield ? 'Your savings balance is active' : 'Set aside cUSD for your savings balance'}
                                 </p>
                             </div>
                         </div>

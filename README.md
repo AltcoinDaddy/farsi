@@ -23,7 +23,7 @@ Trust, but verify. Every action in Farsi generates a dynamic, high-fidelity rece
 ###  **Live Wallet**
 Stay on top of your assets. Our real-time wallet pulls directly from **Celo Sepolia**, showing your live **cUSD** and **CELO** balances. Every transaction is block-synced and authentic.
 
-###  **Smart Earn**
+###  **Smart Save**
 Don't let your money sit idle. Farsi Save connects you to a simple savings vault. Deposit your cUSD with a tap and withdraw whenever you want while we validate the full MiniPay-native savings experience.
 
 ###  **Social Pots (Save with Friends)**
