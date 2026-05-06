@@ -74,54 +74,17 @@ export default function EarnScreen() {
     const currentApy = typeof currentApyBps === 'bigint' ? currentApyBps : 450n;
     const allowanceValue = typeof allowance === 'bigint' ? allowance : 0n;
 
-    type FaucetResponse = {
-        message?: string;
-    };
-
-    const handleFaucet = async () => {
-        if (!address) return;
-        setIsUpdating(true);
-
-        try {
-            const response = await fetch('/api/faucet', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ address }),
-            });
-
-            const data = await response
-                .json()
-                .catch<null>(() => null) as FaucetResponse | null;
-
-            if (!response.ok) {
-                throw new Error(
-                    data?.message || 'Funding information could not be loaded.'
-                );
-            }
-
-            await refetchCUSD();
-            toast.success('Funding info ready', {
-                description: data?.message || 'Use MiniPay or a Celo wallet to fund your cUSD balance.',
-            });
-            addNotification({
-                title: 'Funding Needed',
-                description: 'Use MiniPay Add Cash to fund your stablecoin balance',
-                type: 'info',
-                icon: 'payments'
-            });
-        } catch (error) {
-            console.error('Faucet failed:', error);
-            toast.error('Faucet failed', {
-                description:
-                    error instanceof Error
-                        ? error.message
-                        : 'Please try again later or check your network.',
-            });
-        } finally {
-            setIsUpdating(false);
-        }
+    const handleFundingHelp = () => {
+        addNotification({
+            title: 'Funding Needed',
+            description: 'Use MiniPay Add Cash to fund your stablecoin balance',
+            type: 'info',
+            icon: 'payments'
+        });
+        toast.info('Open Add Cash', {
+            description: 'Funding now goes through the MiniPay Add Cash flow.',
+        });
+        router.push('/buy');
     };
 
     const handleWithdraw = async () => {
@@ -305,12 +268,12 @@ export default function EarnScreen() {
                         </button>
                     ))}
                     <button
-                        onClick={handleFaucet}
-                        disabled={isUpdating || !address}
+                        onClick={handleFundingHelp}
+                        disabled={!address}
                         className="ml-auto text-[11px] font-bold text-primary flex items-center gap-1 hover:opacity-70 disabled:opacity-50"
                     >
                         <span className="material-symbols-outlined text-[16px]">water_drop</span>
-                        Funding Help
+                        Open Add Cash
                     </button>
                 </div>
                 <p className="text-[10px] text-slate-400 font-medium px-1">
