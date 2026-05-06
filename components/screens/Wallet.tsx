@@ -9,6 +9,7 @@ import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { useActiveWalletAddress } from '@/lib/active-wallet';
 import { useCeloUsdPrice } from '@/lib/use-celo-price';
 import { useCusdTransferHistory } from '@/lib/use-usdc-transfer-history';
+import { openMiniPayAddCash } from '@/lib/minipay';
 
 function timeAgo(date: number | Date) {
     const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
@@ -65,6 +66,7 @@ export default function WalletScreen() {
         (cUsdBalance ? parseFloat(formatUnits(cUsdBalance.value, cUsdBalance.decimals)) : 0) +
         (celoBalance ? parseFloat(formatUnits(celoBalance.value, celoBalance.decimals)) * celoUsdPrice : 0)
     ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const hasStableBalance = !!cUsdBalance && cUsdBalance.value > 0n;
 
     return (
         <div className="flex flex-col min-h-screen bg-[#F8F9FA] text-slate-900">
@@ -98,6 +100,26 @@ export default function WalletScreen() {
             </header>
 
             <main className="flex-1 p-6 space-y-10 pb-24">
+                {!hasStableBalance && (
+                    <section className="rounded-[28px] border border-primary/15 bg-primary/5 p-5 shadow-sm">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Need cUSD?</p>
+                                <h3 className="text-lg font-black tracking-tight text-slate-900">Fund your wallet with MiniPay Add Cash.</h3>
+                                <p className="text-xs font-bold leading-relaxed text-slate-500">
+                                    Top up cUSD first, then come back to save, send, or join a pot.
+                                </p>
+                            </div>
+                            <button
+                                onClick={openMiniPayAddCash}
+                                className="shrink-0 rounded-2xl bg-primary px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-primary/20 transition-all active:scale-95"
+                            >
+                                Add Cash
+                            </button>
+                        </div>
+                    </section>
+                )}
+
                 {/* Token List */}
                 <section>
                     <div className="flex justify-between items-center mb-6 px-1">
