@@ -2,9 +2,12 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
-import { getReceiptFeeLabel } from '@/lib/receipts';
+import {
+    createExplorerReceiptUrl,
+    createMiniPayReceiptUrl,
+    getReceiptFeeLabel,
+} from '@/lib/receipts';
 import { TransactionFeeMode } from '@/lib/aa-config';
-import { celoSepoliaChain } from '@/lib/web3-config';
 
 interface ReceiptProps {
     withShare?: boolean;
@@ -16,8 +19,11 @@ function ReceiptContent({ withShare }: ReceiptProps) {
 
     const amount = searchParams.get('amount') || '0.00';
     const type = searchParams.get('type') || 'Transaction';
+    const txHash = searchParams.get('hash');
     const feeMode = (searchParams.get('fee') as TransactionFeeMode | null) || 'native';
     const feeLabel = getReceiptFeeLabel(feeMode);
+    const explorerUrl = txHash ? createExplorerReceiptUrl(txHash) : null;
+    const miniPayReceiptUrl = txHash ? createMiniPayReceiptUrl(txHash) : null;
     const date = new Date().toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -43,7 +49,7 @@ function ReceiptContent({ withShare }: ReceiptProps) {
                     </div>
                     <div className="space-y-1">
                         <p className="text-success font-black text-xl uppercase tracking-wider">Success</p>
-                        <p className="text-neutral-muted text-sm font-medium">Confirmed on Celo Sepolia</p>
+                        <p className="text-neutral-muted text-sm font-medium">Confirmed on Celo Sepolia and ready to share</p>
                     </div>
                     <h1 className="mt-6 text-4xl font-black tracking-tight text-slate-900 italic">
                         {amount} cUSD
@@ -74,13 +80,28 @@ function ReceiptContent({ withShare }: ReceiptProps) {
                                 {feeLabel}
                             </span>
                         </div>
+                        {txHash && (
+                            <div className="flex justify-between items-center py-1">
+                                <span className="text-slate-500 text-sm font-medium">Transaction</span>
+                                <span className="text-slate-900 font-bold text-sm">{txHash.slice(0, 6)}...{txHash.slice(-4)}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 <div className="px-6 pb-8 pt-6 border-t border-gray-100 space-y-3">
-                    {searchParams.get('hash') && (
+                    {miniPayReceiptUrl && (
                         <a
-                            href={`${celoSepoliaChain.blockExplorers?.default.url}/tx/${searchParams.get('hash')}`}
+                            href={miniPayReceiptUrl}
+                            className="w-full py-5 bg-primary/10 text-primary font-black rounded-2xl flex items-center justify-center gap-2 hover:bg-primary/15 transition-all active:scale-95"
+                        >
+                            <span className="material-symbols-outlined !text-xl">wallet</span>
+                            Open in MiniPay
+                        </a>
+                    )}
+                    {explorerUrl && (
+                        <a
+                            href={explorerUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="w-full py-5 bg-white border-2 border-slate-100 text-slate-400 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95"
@@ -95,8 +116,7 @@ function ReceiptContent({ withShare }: ReceiptProps) {
                     {!withShare && (
                         <button 
                             onClick={async () => {
-                                const txHash = searchParams.get('hash');
-                                const shareText = `✅ ${type} — ${amount} cUSD on Celo Sepolia\n${txHash ? `View: ${celoSepoliaChain.blockExplorers?.default.url}/tx/${txHash}` : ''}`;
+                                const shareText = `✅ ${type} — ${amount} cUSD on Celo Sepolia\n${explorerUrl ? `View: ${explorerUrl}` : ''}${miniPayReceiptUrl ? `\nMiniPay: ${miniPayReceiptUrl}` : ''}`;
                                 
                                 if (navigator.share) {
                                     try {

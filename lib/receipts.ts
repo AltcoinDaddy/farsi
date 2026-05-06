@@ -1,4 +1,5 @@
 import { TransactionFeeMode } from './aa-config';
+import { celoSepoliaChain } from './web3-config';
 
 export function createReceiptUrl(
     amount: string,
@@ -30,4 +31,12 @@ export function createReceiptUrl(
 
 export function getReceiptFeeLabel(feeMode: TransactionFeeMode) {
     return feeMode === 'configured' ? 'Configured Sponsorship' : 'Native CELO';
+}
+
+export function createExplorerReceiptUrl(hash: string) {
+    return `${celoSepoliaChain.blockExplorers?.default.url}/tx/${hash}`;
+}
+
+export function createMiniPayReceiptUrl(hash: string) {
+    return `https://link.minipay.xyz/receipt?tx=${hash}`;
 }
