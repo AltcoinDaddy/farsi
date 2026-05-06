@@ -1,5 +1,5 @@
-import SpendScreen from '@/components/screens/Spend';
+import { redirect } from 'next/navigation';
 
 export default function SpendPage() {
-    return <SpendScreen />;
+    redirect('/social');
 }

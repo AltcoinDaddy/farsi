@@ -32,8 +32,8 @@ Project savings, group gifts, or trip funds—on-chain. Create a "Social Pot," s
 ###  **Global Send**
 Seamless P2P transfers. Send cUSD to anyone on Celo instantly. When sponsorship is configured, the app can use that path for fees; otherwise the wallet pays standard CELO gas.
 
-###  **Integrated Spend**
-The long-term goal is a full savings-and-spend loop. For now, the strongest product path is **social saving in cUSD**, backed by real contracts on Celo Sepolia.
+###  **Focused v1**
+Farsi is deliberately centered on **Save, Pots, and Send** for the current MiniPay/Celo version. Spend flows are parked until there is a real MiniPay-native payment or cash-out path to support them.
 
 ---
 
