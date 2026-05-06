@@ -20,7 +20,7 @@ export type TransferHistoryItem = Log & {
     timestamp: number;
 };
 
-export function useUsdcTransferHistory(
+export function useCusdTransferHistory(
     address?: `0x${string}`,
     limit = 10
 ) {
@@ -48,13 +48,13 @@ export function useUsdcTransferHistory(
 
                 const [sentLogs, receivedLogs] = await Promise.all([
                     publicClient.getLogs({
-                        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
+                        address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
                         event: TRANSFER_EVENT,
                         args: { from: address },
                         fromBlock,
                     }),
                     publicClient.getLogs({
-                        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
+                        address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
                         event: TRANSFER_EVENT,
                         args: { to: address },
                         fromBlock,

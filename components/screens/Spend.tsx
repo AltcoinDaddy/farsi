@@ -7,7 +7,7 @@ import { useReadContract } from 'wagmi';
 import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { parseUnits, formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
-import MockUSDCABI from '@/lib/abi/MockUSDC.json';
+import CUSDTokenABI from '@/lib/abi/MockUSDC.json';
 import { celoSepoliaChain } from '@/lib/web3-config';
 import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
@@ -25,10 +25,10 @@ export default function SpendScreen() {
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [autoSave, setAutoSave] = React.useState(true);
 
-    // Fetch mUSDC balance
-    const { data: usdcBalance, refetch: refetchUSDC } = useReadContract({
-        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-        abi: MockUSDCABI,
+    // Fetch cUSD balance
+    const { data: cUsdBalance, refetch: refetchCUSD } = useReadContract({
+        address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+        abi: CUSDTokenABI,
         functionName: 'balanceOf',
         args: address ? [address] : undefined,
         query: { enabled: !!address },
@@ -36,16 +36,16 @@ export default function SpendScreen() {
 
     // Fetch allowance for Vault
     const { data: vaultAllowance } = useReadContract({
-        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-        abi: MockUSDCABI,
+        address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+        abi: CUSDTokenABI,
         functionName: 'allowance',
         args: address ? [address, CONTRACT_ADDRESSES.YieldVault] : undefined,
         query: { enabled: !!address },
     });
 
     const { data: merchantWallet } = useReadContract({
-        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-        abi: MockUSDCABI,
+        address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+        abi: CUSDTokenABI,
         functionName: 'owner',
         query: { enabled: !!address },
     });
@@ -65,10 +65,10 @@ export default function SpendScreen() {
 
         try {
             // 1. Primary Purchase Transaction
-            console.log(`Purchasing ${category} for ${amount} mUSDC...`);
+            console.log(`Purchasing ${category} for ${amount} cUSD...`);
             const buyHash = await writeContractAsync({
-                address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-                abi: MockUSDCABI,
+                address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+                abi: CUSDTokenABI,
                 functionName: 'transfer',
                 args: [merchantAddress, amountWei],
                 account: address as `0x${string}`,
@@ -88,8 +88,8 @@ export default function SpendScreen() {
                     // Check allowance
                     if ((vaultAllowance as bigint || 0n) < changeWei) {
                         const appHash = await writeContractAsync({
-                            address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-                            abi: MockUSDCABI,
+                            address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+                            abi: CUSDTokenABI,
                             functionName: 'approve',
                             args: [CONTRACT_ADDRESSES.YieldVault as `0x${string}`, parseUnits('1000000', 18)],
                             account: address as `0x${string}`,
@@ -116,7 +116,7 @@ export default function SpendScreen() {
                 }
             }
 
-            await refetchUSDC();
+            await refetchCUSD();
             toast.success('Purchase successful!', {
                 description: `Your ${category} gift card is ready.`,
             });
@@ -141,9 +141,9 @@ export default function SpendScreen() {
         }
     };
 
-    const usdcBalanceValue = typeof usdcBalance === 'bigint' ? usdcBalance : 0n;
+    const cUsdBalanceValue = typeof cUsdBalance === 'bigint' ? cUsdBalance : 0n;
     const merchantAddress = typeof merchantWallet === 'string' ? merchantWallet : undefined;
-    const formattedUSDC = parseFloat(formatUnits(usdcBalanceValue, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedCUSD = parseFloat(formatUnits(cUsdBalanceValue, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const merchantSummary = merchantAddress
         ? `${merchantAddress.slice(0, 6)}...${merchantAddress.slice(-4)}`
         : 'Loading merchant wallet...';
@@ -167,7 +167,7 @@ export default function SpendScreen() {
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Available Funds</p>
-                            <p className="text-lg font-black text-slate-900 italic">{formattedUSDC} <span className="text-[10px] uppercase opacity-40 not-italic">cUSD</span></p>
+                            <p className="text-lg font-black text-slate-900 italic">{formattedCUSD} <span className="text-[10px] uppercase opacity-40 not-italic">cUSD</span></p>
                         </div>
                     </div>
                 </div>

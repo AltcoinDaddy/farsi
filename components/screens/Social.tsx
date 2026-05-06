@@ -6,7 +6,7 @@ import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import SharedPotFactoryABI from '@/lib/abi/SharedPotFactory.json';
 import SharedPotABI from '@/lib/abi/SharedPot.json';
-import MockUSDCABI from '@/lib/abi/MockUSDC.json';
+import CUSDTokenABI from '@/lib/abi/MockUSDC.json';
 import { formatUnits, parseUnits } from 'viem';
 import { celoSepoliaChain } from '@/lib/web3-config';
 import { wagmiConfig } from '@/app/providers';
@@ -221,8 +221,8 @@ function PotCard({ address }: { address: PotAddress }) {
 
     // Fetch account allowance for this pot
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
-        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-        abi: MockUSDCABI,
+        address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+        abi: CUSDTokenABI,
         functionName: 'allowance',
         args: activeAddress ? [activeAddress, address] : undefined,
         query: { enabled: !!activeAddress },
@@ -271,8 +271,8 @@ function PotCard({ address }: { address: PotAddress }) {
             if (allowanceValue < amountValidation.amountWei) {
                 console.log('Insufficient allowance for pot, approving...');
                 const approveHash = await writeContractAsync({
-                    address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-                    abi: MockUSDCABI,
+                    address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+                    abi: CUSDTokenABI,
                     functionName: 'approve',
                     args: [address, parseUnits('1000', 18)], // Approve $1000 for convenience
                     account: walletAddress,
