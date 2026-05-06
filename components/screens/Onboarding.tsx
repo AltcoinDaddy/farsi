@@ -43,8 +43,6 @@ export default function Onboarding() {
         }
     };
 
-    if (!isMiniPay && !ready && !loading) return null;
-
     return (
         <div className="flex flex-col min-h-screen bg-white">
             <div className="flex-1 flex flex-col p-8 justify-center max-w-[480px] mx-auto w-full">
@@ -64,7 +62,7 @@ export default function Onboarding() {
                     </div>
                 )}
 
-                {!loading && (ready || isMiniPay) && step === 1 && (
+                {!loading && step === 1 && (
                     <div className="space-y-6">
                         <div className="w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center text-primary mb-8 shadow-sm">
                             <span className="material-symbols-outlined !text-4xl">account_balance_wallet</span>
@@ -73,7 +71,9 @@ export default function Onboarding() {
                         <p className="text-neutral-muted font-medium leading-relaxed">
                             {isMiniPay
                                 ? 'MiniPay detected. Connect your wallet and start saving together in cUSD.'
-                                : 'The easiest way to save together on Celo. No seed phrase drama, just open your wallet and go.'}
+                                : ready
+                                    ? 'The easiest way to save together on Celo. No seed phrase drama, just open your wallet and go.'
+                                    : 'Preparing secure sign-in so you can get into Farsi on Celo.'}
                         </p>
                         <div className="pt-8">
                             {isMiniPay ? (
@@ -88,16 +88,19 @@ export default function Onboarding() {
                             ) : (
                                 <button
                                     onClick={login}
+                                    disabled={!ready}
                                     className="w-full bg-primary text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all"
                                 >
-                                    Continue with Email / Social
+                                    {ready ? 'Continue with Email / Social' : 'Preparing Sign-In...'}
                                     <span className="material-symbols-outlined">chevron_right</span>
                                 </button>
                             )}
                             <p className="text-center text-[10px] text-neutral-muted mt-4">
                                 {isMiniPay
                                     ? 'Farsi connects automatically inside MiniPay when an injected wallet is available.'
-                                    : 'Built for mobile-first stablecoin saving on Celo.'}
+                                    : ready
+                                        ? 'Built for mobile-first stablecoin saving on Celo.'
+                                        : 'The sign-in button will unlock as soon as the secure auth client is ready.'}
                             </p>
                         </div>
                     </div>
