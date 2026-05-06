@@ -8,7 +8,7 @@ import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { parseUnits, formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
-import { flowEVMTestnet } from '@/lib/web3-config';
+import { celoSepoliaChain } from '@/lib/web3-config';
 import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { useRouter } from 'next/navigation';
@@ -72,7 +72,7 @@ export default function SpendScreen() {
                 functionName: 'transfer',
                 args: [merchantAddress, amountWei],
                 account: address as `0x${string}`,
-                chain: flowEVMTestnet,
+                chain: celoSepoliaChain,
             });
             await waitForTransactionReceipt(wagmiConfig, { hash: buyHash });
 
@@ -93,7 +93,7 @@ export default function SpendScreen() {
                             functionName: 'approve',
                             args: [CONTRACT_ADDRESSES.YieldVault as `0x${string}`, parseUnits('1000000', 18)],
                             account: address as `0x${string}`,
-                            chain: flowEVMTestnet,
+                            chain: celoSepoliaChain,
                         });
                         await waitForTransactionReceipt(wagmiConfig, { hash: appHash });
                     }
@@ -105,7 +105,7 @@ export default function SpendScreen() {
                         functionName: 'deposit',
                         args: [changeWei, address],
                         account: address as `0x${string}`,
-                        chain: flowEVMTestnet,
+                        chain: celoSepoliaChain,
                     });
                     await waitForTransactionReceipt(wagmiConfig, { hash: depositHash });
                     
@@ -167,14 +167,14 @@ export default function SpendScreen() {
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Available Funds</p>
-                            <p className="text-lg font-black text-slate-900 italic">{formattedUSDC} <span className="text-[10px] uppercase opacity-40 not-italic">mUSDC</span></p>
+                            <p className="text-lg font-black text-slate-900 italic">{formattedUSDC} <span className="text-[10px] uppercase opacity-40 not-italic">cUSD</span></p>
                         </div>
                     </div>
                 </div>
 
                 <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
                     <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                        Demo purchases settle to the configured merchant wallet on Flow EVM: <span className="font-black text-slate-900">{merchantSummary}</span>
+                        Demo purchases settle to the configured merchant wallet on Celo Sepolia: <span className="font-black text-slate-900">{merchantSummary}</span>
                     </p>
                 </div>
 
@@ -235,7 +235,7 @@ export default function SpendScreen() {
                         <div className="bg-success/5 rounded-2xl p-4 flex items-center gap-3 border border-success/10 animate-in slide-in-from-top-2 duration-300">
                             <span className="material-symbols-outlined text-success text-sm">info</span>
                             <p className="text-[9px] font-black text-success uppercase tracking-widest leading-relaxed">
-                                Change is auto-deposited into your <span className="underline italic">Yield Vault</span> at 4.2% APY.
+                                Change is auto-deposited into your <span className="underline italic">savings vault</span> at 4.2% APY.
                             </p>
                         </div>
                     )}

@@ -9,7 +9,7 @@ import YieldVaultABI from '@/lib/abi/YieldVault.json';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
 import { formatUnits, parseUnits } from 'viem';
 import { useRouter } from 'next/navigation';
-import { flowEVMTestnet } from '@/lib/web3-config';
+import { celoSepoliaChain } from '@/lib/web3-config';
 import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { toast } from 'sonner';
@@ -97,19 +97,19 @@ export default function EarnScreen() {
 
             if (!response.ok) {
                 throw new Error(
-                    data?.message || 'The faucet request could not be completed.'
+                    data?.message || 'Funding information could not be loaded.'
                 );
             }
 
             await refetchUSDC();
-            toast.success('Test funds received!', {
-                description: data?.message || '1,000 mUSDC has been added to your wallet.',
+            toast.success('Funding info ready', {
+                description: data?.message || 'Use MiniPay or a Celo wallet to fund your cUSD balance.',
             });
             addNotification({
-                title: 'Test Funds Added',
-                description: '1,000 mUSDC is now available in your wallet',
-                type: 'success',
-                icon: 'water_drop'
+                title: 'Funding Needed',
+                description: 'Use MiniPay Add Cash to fund your stablecoin balance',
+                type: 'info',
+                icon: 'payments'
             });
         } catch (error) {
             console.error('Faucet failed:', error);
@@ -143,16 +143,16 @@ export default function EarnScreen() {
                 functionName: 'withdraw',
                 args: [amountValidation.amountWei, address, address],
                 account: address,
-                chain: flowEVMTestnet,
+                chain: celoSepoliaChain,
             });
             await waitForTransactionReceipt(wagmiConfig, { hash: withdrawHash });
             await Promise.all([refetchVault(), refetchUSDC(), refetchAllowance()]);
             toast.success('Withdrawal complete', {
-                description: `${amount} mUSDC has been returned to your wallet.`,
+                description: `${amount} cUSD has been returned to your wallet.`,
             });
             addNotification({
                 title: 'Withdrawal Complete',
-                description: `Withdrew ${amount} mUSDC from YieldVault`,
+                description: `Withdrew ${amount} cUSD from your savings vault`,
                 type: 'success',
                 icon: 'account_balance_wallet'
             });
@@ -195,7 +195,7 @@ export default function EarnScreen() {
                     functionName: 'approve',
                     args: [CONTRACT_ADDRESSES.YieldVault, parseUnits('10000', 18)], // Approve a larger amount for better UX
                     account: address,
-                    chain: flowEVMTestnet,
+                    chain: celoSepoliaChain,
                 });
                 await waitForTransactionReceipt(wagmiConfig, { hash: approveHash });
                 await refetchAllowance();
@@ -209,18 +209,18 @@ export default function EarnScreen() {
                 functionName: 'deposit',
                 args: [amountValidation.amountWei, address],
                 account: address,
-                chain: flowEVMTestnet,
+                chain: celoSepoliaChain,
             });
             await waitForTransactionReceipt(wagmiConfig, { hash: depositHash });
 
             // Final refresh
             await Promise.all([refetchUSDC(), refetchVault()]);
             toast.success('Deposit successful!', {
-                description: `Successfully saved ${amount} mUSDC in the vault.`,
+                description: `Successfully saved ${amount} cUSD in the vault.`,
             });
             addNotification({
                 title: 'Deposit Successful',
-                description: `Saved ${amount} mUSDC in YieldVault`,
+                description: `Saved ${amount} cUSD in your vault`,
                 type: 'success',
                 icon: 'savings'
             });
@@ -243,7 +243,7 @@ export default function EarnScreen() {
             <header className="flex justify-between items-center mb-2">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Earn Yield</h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Simulated vault yield for test funds</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Save stablecoins on Celo Sepolia</p>
                 </div>
                 <div className="w-10 h-10 bg-success-light rounded-full flex items-center justify-center text-success">
                     <span className="material-symbols-outlined">payments</span>
@@ -255,7 +255,7 @@ export default function EarnScreen() {
                 <p className="text-success-light/80 text-xs font-bold uppercase tracking-wider mb-1">Your Vault Value</p>
                 <div className="flex items-baseline gap-1">
                     <h2 className="text-4xl font-bold mb-4">${formattedVault}</h2>
-                    <span className="text-success-light text-sm mb-4">mUSDC</span>
+                    <span className="text-success-light text-sm mb-4">cUSD</span>
                 </div>
                 <div className="flex gap-4 border-t border-white/20 pt-4">
                     <div>
@@ -280,7 +280,7 @@ export default function EarnScreen() {
             <div className="space-y-3">
                 <div className="flex justify-between items-center px-1">
                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Amount to Save</label>
-                    <span className="text-[10px] text-slate-400 font-bold">Wallet: {formattedUSDC} mUSDC</span>
+                    <span className="text-[10px] text-slate-400 font-bold">Wallet: {formattedUSDC} cUSD</span>
                 </div>
                 <div className="relative group">
                     <input
@@ -291,7 +291,7 @@ export default function EarnScreen() {
                         className="w-full bg-slate-50 dark:bg-[#151825] border-2 border-slate-100 dark:border-[#2D3348] rounded-3xl p-6 text-3xl font-black text-slate-900 dark:text-white focus:border-primary outline-none transition-all pr-24"
                     />
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 font-black text-slate-400">
-                        mUSDC
+                        cUSD
                     </div>
                 </div>
                 <div className="flex gap-2">
@@ -310,11 +310,11 @@ export default function EarnScreen() {
                         className="ml-auto text-[11px] font-bold text-primary flex items-center gap-1 hover:opacity-70 disabled:opacity-50"
                     >
                         <span className="material-symbols-outlined text-[16px]">water_drop</span>
-                        Get Test Funds
+                        Funding Help
                     </button>
                 </div>
                 <p className="text-[10px] text-slate-400 font-medium px-1">
-                    Demo faucet adds 1,000 mUSDC to your current wallet when the server faucet key is configured.
+                    Funding is handled through your Celo wallet. MiniPay Add Cash is the preferred path for real use.
                 </p>
             </div>
 
@@ -353,7 +353,7 @@ export default function EarnScreen() {
                 </div>
                 <div className="mt-4 p-4 bg-primary/5 rounded-2xl border border-primary/10">
                     <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                        Yield accrues from the demo vault logic in the contract, while deposits remain backed by the underlying mUSDC held in the vault.
+                        Yield accrues from the demo vault logic in the contract, while deposits remain backed by the underlying stable token held in the vault.
                     </p>
                 </div>
             </div>

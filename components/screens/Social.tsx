@@ -8,7 +8,7 @@ import SharedPotFactoryABI from '@/lib/abi/SharedPotFactory.json';
 import SharedPotABI from '@/lib/abi/SharedPot.json';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
 import { formatUnits, parseUnits } from 'viem';
-import { flowEVMTestnet } from '@/lib/web3-config';
+import { celoSepoliaChain } from '@/lib/web3-config';
 import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { useRouter } from 'next/navigation';
@@ -58,14 +58,14 @@ export default function SocialScreen() {
                 functionName: 'createPot',
                 args: [potName, potTargetValidation.amountWei],
                 account: walletAddress,
-                chain: flowEVMTestnet,
+                chain: celoSepoliaChain,
             });
             await waitForTransactionReceipt(wagmiConfig, { hash: createHash });
             await refetchPots();
             setShowModal(false);
             setPotName('');
             toast.success('Social Pot created!', {
-                description: `Successfully started "${potName}" with a $${potTarget} goal.`,
+                description: `Successfully started "${potName}" with a ${potTarget} cUSD goal.`,
             });
             // Redirect to receipt for creating the pot
             router.push(
@@ -171,7 +171,7 @@ export default function SocialScreen() {
                                     />
                                 </div>
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Savings Target (mUSDC)</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Savings Target (cUSD)</label>
                                     <div className="relative group">
                                         <input
                                             type="number"
@@ -180,7 +180,7 @@ export default function SocialScreen() {
                                             placeholder="500"
                                             className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-5 font-black text-slate-900 focus:border-primary outline-none transition-all placeholder:text-slate-300"
                                         />
-                                        <div className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white border border-slate-100 px-3 py-1.5 rounded-lg shadow-sm">USDC</div>
+                                        <div className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white border border-slate-100 px-3 py-1.5 rounded-lg shadow-sm">cUSD</div>
                                     </div>
                                 </div>
                             </div>
@@ -276,7 +276,7 @@ function PotCard({ address }: { address: PotAddress }) {
                     functionName: 'approve',
                     args: [address, parseUnits('1000', 18)], // Approve $1000 for convenience
                     account: walletAddress,
-                    chain: flowEVMTestnet,
+                    chain: celoSepoliaChain,
                 });
                 await waitForTransactionReceipt(wagmiConfig, { hash: approveHash });
                 await refetchAllowance();
@@ -290,14 +290,14 @@ function PotCard({ address }: { address: PotAddress }) {
                 functionName: 'contribute',
                 args: [amountValidation.amountWei],
                 account: walletAddress,
-                chain: flowEVMTestnet,
+                chain: celoSepoliaChain,
             });
             await waitForTransactionReceipt(wagmiConfig, { hash: contributeHash });
 
             // Final refresh
             await refetchCurrent();
             toast.success('Contribution sent!', {
-                description: `Successfully added ${amount} mUSDC to the pot.`,
+                description: `Successfully added ${amount} cUSD to the pot.`,
             });
             // Redirect to receipt
             router.push(
@@ -333,7 +333,7 @@ function PotCard({ address }: { address: PotAddress }) {
                 abi: SharedPotABI,
                 functionName: 'withdraw',
                 account: walletAddress,
-                chain: flowEVMTestnet,
+                chain: celoSepoliaChain,
             });
             await waitForTransactionReceipt(wagmiConfig, { hash: withdrawHash });
             await refetchCurrent();

@@ -34,7 +34,7 @@ contract SharedPot is ReentrancyGuard {
     function contribute(uint256 amount) external nonReentrant {
         require(amount > 0, "Amount must be > 0");
 
-        // Transfer mUSDC from user to this pot
+        // Transfer the configured stable token from user to this pot
         asset.transferFrom(msg.sender, address(this), amount);
 
         if (balances[msg.sender] == 0) {
@@ -66,7 +66,7 @@ contract SharedPot is ReentrancyGuard {
 
 /**
  * @title SharedPotFactory
- * @dev Factory to create new SharedPots on Flow EVM.
+ * @dev Factory to create new SharedPots on Celo-compatible EVM networks.
  */
 contract SharedPotFactory is Ownable {
     SharedPot[] public pots;

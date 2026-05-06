@@ -5,8 +5,8 @@ require("dotenv").config({ path: ".env.local" });
 module.exports = {
     solidity: "0.8.20",
     networks: {
-        flowTestnet: {
-            url: "https://testnet.evm.nodes.onflow.org",
+        celoSepolia: {
+            url: process.env.NEXT_PUBLIC_CELO_RPC || "https://forno.celo-sepolia.celo-testnet.org",
             accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
         },
     },

@@ -12,7 +12,7 @@ import React from 'react';
 import { toast } from 'sonner';
 import { useNotifications } from '@/lib/notification-context';
 import { useActiveWalletAddress } from '@/lib/active-wallet';
-import { useFlowUsdPrice } from '@/lib/use-flow-price';
+import { useCeloUsdPrice } from '@/lib/use-celo-price';
 import { useUsdcTransferHistory } from '@/lib/use-usdc-transfer-history';
 
 function timeAgo(date: Date): string {
@@ -30,7 +30,7 @@ export default function DashboardPage() {
     const [showReceiveModal, setShowReceiveModal] = React.useState(false);
     const [showNotifications, setShowNotifications] = React.useState(false);
     const { notifications, unreadCount, markAllRead } = useNotifications();
-    const { flowUsdPrice } = useFlowUsdPrice();
+    const { celoUsdPrice } = useCeloUsdPrice();
     const { transactions, isLoadingHistory } = useUsdcTransferHistory(address, 3);
 
     const { data: balance, isLoading: isBalanceLoading } = useBalance({
@@ -63,7 +63,7 @@ export default function DashboardPage() {
     const usdcVal = parseFloat(formatUnits(usdcBalanceValue, 18));
     
     // Calculate Portfolio Value in USD
-    const totalFiatValue = (flowVal * flowUsdPrice) + usdcVal;
+    const totalFiatValue = (flowVal * celoUsdPrice) + usdcVal;
 
     const formattedBalance = flowVal.toFixed(2);
     const formattedUsdc = usdcVal.toFixed(2);
@@ -179,7 +179,7 @@ export default function DashboardPage() {
                                 <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl self-start">
                                     <div className="size-4 rounded-full bg-primary border-2 border-white flex items-center justify-center text-[8px] font-bold text-white italic">F</div>
                                     <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                                        {formattedBalance} FLOW <span className="text-slate-300 mx-1">/</span> <span className="text-primary">${(flowVal * flowUsdPrice).toFixed(2)}</span>
+                                        {formattedBalance} CELO <span className="text-slate-300 mx-1">/</span> <span className="text-primary">${(flowVal * celoUsdPrice).toFixed(2)}</span>
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl self-start">
@@ -247,7 +247,7 @@ export default function DashboardPage() {
                                     </button>
                                 </div>
                                 <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[12px] text-success">verified</span> Flow EVM Network
+                                    <span className="material-symbols-outlined text-[12px] text-success">verified</span> Celo Sepolia Network
                                 </p>
                             </div>
                         </div>
@@ -275,7 +275,7 @@ export default function DashboardPage() {
                                     {hasYield ? 'Your savings are active' : 'Start Earning Yield'}
                                 </h4>
                                 <p className="text-xs font-bold text-slate-500">
-                                    {hasYield ? 'Vault assets are working for you' : 'Put your idle mUSDC to work'}
+                                    {hasYield ? 'Vault assets are working for you' : 'Put your idle cUSD to work'}
                                 </p>
                             </div>
                         </div>
@@ -335,7 +335,7 @@ export default function DashboardPage() {
                                             </div>
                                             <div className="space-y-0.5">
                                                 <p className="text-sm font-black text-slate-900 italic tracking-tight">
-                                                    {isOutgoing ? 'Sent mUSDC' : 'Received mUSDC'}
+                                                    {isOutgoing ? 'Sent cUSD' : 'Received cUSD'}
                                                 </p>
                                                 <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest">Confirmed • Block {Number(tx.blockNumber).toLocaleString()}</p>
                                             </div>

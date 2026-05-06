@@ -29,5 +29,5 @@ export function createReceiptUrl(
 }
 
 export function getReceiptFeeLabel(feeMode: TransactionFeeMode) {
-    return feeMode === 'configured' ? 'Configured Sponsorship' : 'Native FLOW';
+    return feeMode === 'configured' ? 'Configured Sponsorship' : 'Native CELO';
 }

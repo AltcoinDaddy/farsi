@@ -6,7 +6,7 @@ export function getErrorMessage(error: unknown, fallback: string) {
 
 export function validateTokenAmount(
     value: string,
-    symbol = 'mUSDC',
+    symbol = 'cUSD',
     decimals = 18
 ) {
     const trimmed = value.trim();
@@ -47,7 +47,7 @@ export function validateRecipientAddress(
     }
 
     if (!isAddress(trimmed)) {
-        return { ok: false as const, message: 'Enter a valid Flow EVM wallet address.' };
+        return { ok: false as const, message: 'Enter a valid Celo wallet address.' };
     }
 
     const normalized = trimmed as `0x${string}`;

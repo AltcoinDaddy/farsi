@@ -4,16 +4,16 @@ import { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider, createConfig } from '@privy-io/wagmi';
 import { http } from 'wagmi';
-import { flowEVMTestnet } from '@/lib/web3-config';
+import { celoSepoliaChain } from '@/lib/web3-config';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { AuthGuard } from '@/components/AuthGuard';
 import { ThemeProvider } from '@/lib/theme-context';
 import { NotificationProvider } from '@/lib/notification-context';
 
 export const wagmiConfig = createConfig({
-    chains: [flowEVMTestnet],
+    chains: [celoSepoliaChain],
     transports: {
-        [flowEVMTestnet.id]: http(),
+        [celoSepoliaChain.id]: http(),
     },
 });
 
@@ -39,8 +39,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
                         createOnLogin: 'users-without-wallets',
                     },
                 },
-                defaultChain: flowEVMTestnet,
-                supportedChains: [flowEVMTestnet],
+                defaultChain: celoSepoliaChain,
+                supportedChains: [celoSepoliaChain],
             }}
         >
             <QueryClientProvider client={queryClient}>

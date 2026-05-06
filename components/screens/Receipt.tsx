@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { getReceiptFeeLabel } from '@/lib/receipts';
 import { TransactionFeeMode } from '@/lib/aa-config';
+import { celoSepoliaChain } from '@/lib/web3-config';
 
 interface ReceiptProps {
     withShare?: boolean;
@@ -42,10 +43,10 @@ function ReceiptContent({ withShare }: ReceiptProps) {
                     </div>
                     <div className="space-y-1">
                         <p className="text-success font-black text-xl uppercase tracking-wider">Success</p>
-                        <p className="text-neutral-muted text-sm font-medium">Confirmed on Flow EVM</p>
+                        <p className="text-neutral-muted text-sm font-medium">Confirmed on Celo Sepolia</p>
                     </div>
                     <h1 className="mt-6 text-4xl font-black tracking-tight text-slate-900 italic">
-                        {amount} USDC
+                        {amount} cUSD
                     </h1>
                 </div>
 
@@ -79,13 +80,13 @@ function ReceiptContent({ withShare }: ReceiptProps) {
                 <div className="px-6 pb-8 pt-6 border-t border-gray-100 space-y-3">
                     {searchParams.get('hash') && (
                         <a
-                            href={`https://evm-testnet.flowscan.io/tx/${searchParams.get('hash')}`}
+                            href={`${celoSepoliaChain.blockExplorers?.default.url}/tx/${searchParams.get('hash')}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="w-full py-5 bg-white border-2 border-slate-100 text-slate-400 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-all active:scale-95"
                         >
                             <span className="material-symbols-outlined !text-xl">open_in_new</span>
-                            View on Flowscan
+                            View on Blockscout
                         </a>
                     )}
                     <button onClick={() => router.push('/')} className="w-full py-5 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all">
@@ -95,7 +96,7 @@ function ReceiptContent({ withShare }: ReceiptProps) {
                         <button 
                             onClick={async () => {
                                 const txHash = searchParams.get('hash');
-                                const shareText = `✅ ${type} — ${amount} USDC on Flow EVM\n${txHash ? `View: https://evm-testnet.flowscan.io/tx/${txHash}` : ''}`;
+                                const shareText = `✅ ${type} — ${amount} cUSD on Celo Sepolia\n${txHash ? `View: ${celoSepoliaChain.blockExplorers?.default.url}/tx/${txHash}` : ''}`;
                                 
                                 if (navigator.share) {
                                     try {

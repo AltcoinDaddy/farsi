@@ -2,7 +2,7 @@
  * Account Abstraction Configuration for Farsi DeFi
  * Uses Privy for Authentication and ZeroDev for Smart Accounts
  */
-import { flowEVMTestnet } from './web3-config';
+import { celoSepoliaChain } from './web3-config';
 
 // Replace with actual IDs from dashboard.privy.io and zerodev.app
 export const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID || 'cm...';
@@ -11,9 +11,9 @@ export const SPONSORED_TRANSACTIONS_FLAG =
     process.env.NEXT_PUBLIC_ENABLE_SPONSORED_TRANSACTIONS === 'true';
 
 /**
- * Flow EVM specific RPC for Smart Accounts
+ * Celo Sepolia specific RPC for wallet operations
  */
-export const FLOW_AA_RPC = 'https://testnet.evm.nodes.onflow.org';
+export const CELO_RPC = 'https://forno.celo-sepolia.celo-testnet.org';
 
 export type TransactionFeeMode = 'native' | 'configured';
 
@@ -32,10 +32,10 @@ export function getSponsorshipState() {
     return {
         isConfigured,
         feeMode: (isConfigured ? 'configured' : 'native') as TransactionFeeMode,
-        feeLabel: isConfigured ? 'Configured Sponsorship' : 'Native FLOW',
+        feeLabel: isConfigured ? 'Configured Sponsorship' : 'Native CELO',
         feeDescription: isConfigured
             ? 'Uses the configured smart-account sponsorship path when available.'
-            : 'Requires the wallet to pay Flow testnet gas.',
+            : 'Requires the wallet to pay Celo network gas.',
     };
 }
 
@@ -43,7 +43,7 @@ export function getSponsorshipState() {
  * AA Config Helpers
  */
 export const aaConfig = {
-    chain: flowEVMTestnet,
+    chain: celoSepoliaChain,
     projectId: ZERODEV_PROJECT_ID,
     sponsorship: getSponsorshipState(),
 };

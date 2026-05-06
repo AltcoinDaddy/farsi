@@ -6,7 +6,7 @@ import { Toaster } from 'sonner';
 
 export const metadata = {
     title: 'Farsi - Consumer DeFi',
-    description: 'Premium finance for everyone on Flow EVM',
+    description: 'Save together in cUSD on Celo',
     manifest: '/manifest.json',
 };
 
