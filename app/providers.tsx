@@ -1,21 +1,54 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider, createConfig } from '@privy-io/wagmi';
-import { http } from 'wagmi';
+import { WagmiProvider, createConfig, http, useAccount, useConnect } from 'wagmi';
+import { injected } from 'wagmi/connectors';
 import { celoSepoliaChain } from '@/lib/web3-config';
 import { PrivyProvider } from '@privy-io/react-auth';
 import { AuthGuard } from '@/components/AuthGuard';
 import { ThemeProvider } from '@/lib/theme-context';
 import { NotificationProvider } from '@/lib/notification-context';
+import { useMiniPay } from '@/lib/minipay';
 
 export const wagmiConfig = createConfig({
+    ssr: true,
     chains: [celoSepoliaChain],
+    connectors: [injected()],
     transports: {
         [celoSepoliaChain.id]: http(),
     },
 });
+
+function MiniPayAutoConnect(): null {
+    const { isMiniPay } = useMiniPay();
+    const { address, status } = useAccount();
+    const { connect, connectors, isPending } = useConnect();
+    const hasAttemptedAutoConnect = useRef(false);
+
+    useEffect(() => {
+        if (!isMiniPay || address || status === 'connected' || isPending) return;
+        if (hasAttemptedAutoConnect.current) return;
+
+        const injectedConnector = connectors.find(
+            (connector) => connector.type === 'injected'
+        );
+
+        if (!injectedConnector) return;
+
+        hasAttemptedAutoConnect.current = true;
+        connect({ connector: injectedConnector });
+    }, [
+        address,
+        connect,
+        connectors,
+        isMiniPay,
+        isPending,
+        status,
+    ]);
+
+    return null;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient());
@@ -46,6 +79,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <QueryClientProvider client={queryClient}>
                 {isMounted ? (
                     <WagmiProvider config={wagmiConfig}>
+                        <MiniPayAutoConnect />
                         <ThemeProvider>
                             <NotificationProvider>
                                 <AuthGuard>

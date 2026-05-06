@@ -3,6 +3,8 @@
 import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
+import { useAccount } from 'wagmi';
+import { useMiniPay } from '@/lib/minipay';
 
 const ONBOARDING_ROUTE = '/onboarding';
 const ONBOARDING_STORAGE_KEY = 'farsi_onboarded';
@@ -11,10 +13,15 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const { ready, authenticated } = usePrivy();
+    const { address } = useAccount();
+    const { isMiniPay } = useMiniPay();
     const [isMounted, setIsMounted] = React.useState(false);
     const [hasCompletedOnboarding, setHasCompletedOnboarding] = React.useState(false);
 
     const isOnboardingRoute = pathname === ONBOARDING_ROUTE;
+    const hasWalletSession = !!address;
+    const hasIdentitySession = authenticated || hasWalletSession;
+    const identityReady = isMiniPay ? true : ready;
 
     useEffect(() => {
         setIsMounted(true);
@@ -28,16 +35,16 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }, [isMounted, pathname]);
 
     useEffect(() => {
-        if (!isMounted || !ready) return;
+        if (!isMounted || !identityReady) return;
 
         if (isOnboardingRoute) {
-            if (authenticated && hasCompletedOnboarding) {
+            if (hasIdentitySession && hasCompletedOnboarding) {
                 router.replace('/');
             }
             return;
         }
 
-        if (!authenticated) {
+        if (!hasIdentitySession) {
             router.replace(ONBOARDING_ROUTE);
             return;
         }
@@ -46,15 +53,25 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
             router.replace(ONBOARDING_ROUTE);
             return;
         }
-    }, [authenticated, hasCompletedOnboarding, isMounted, isOnboardingRoute, ready, router]);
+    }, [
+        hasCompletedOnboarding,
+        hasIdentitySession,
+        identityReady,
+        isMounted,
+        isOnboardingRoute,
+        router,
+    ]);
 
     const showLoadingState =
         !isMounted ||
         (!isOnboardingRoute &&
-            (!ready ||
-                !authenticated ||
+            (!identityReady ||
+                !hasIdentitySession ||
                 !hasCompletedOnboarding)) ||
-        (isOnboardingRoute && ready && authenticated && hasCompletedOnboarding);
+        (isOnboardingRoute &&
+            identityReady &&
+            hasIdentitySession &&
+            hasCompletedOnboarding);
 
     if (showLoadingState) {
         return (
