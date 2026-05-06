@@ -63,12 +63,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     ]);
 
     const showLoadingState =
-        !isMounted ||
+        (!isOnboardingRoute && !isMounted) ||
         (!isOnboardingRoute &&
             (!identityReady ||
                 !hasIdentitySession ||
                 !hasCompletedOnboarding)) ||
         (isOnboardingRoute &&
+            isMounted &&
             identityReady &&
             hasIdentitySession &&
             hasCompletedOnboarding);

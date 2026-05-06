@@ -74,11 +74,6 @@ function DevServiceWorkerReset(): null {
 
 export function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient());
-    const [isMounted, setIsMounted] = useState(false);
-
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
 
     return (
         <PrivyProvider
@@ -99,23 +94,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
             }}
         >
             <QueryClientProvider client={queryClient}>
-                {isMounted ? (
-                    <WagmiProvider config={wagmiConfig}>
-                        <DevServiceWorkerReset />
-                        <MiniPayAutoConnect />
-                        <ThemeProvider>
-                            <NotificationProvider>
-                                <AuthGuard>
-                                    {children}
-                                </AuthGuard>
-                            </NotificationProvider>
-                        </ThemeProvider>
-                    </WagmiProvider>
-                ) : (
-                    <div className="min-h-screen bg-white flex items-center justify-center">
-                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                )}
+                <WagmiProvider config={wagmiConfig}>
+                    <DevServiceWorkerReset />
+                    <MiniPayAutoConnect />
+                    <ThemeProvider>
+                        <NotificationProvider>
+                            <AuthGuard>
+                                {children}
+                            </AuthGuard>
+                        </NotificationProvider>
+                    </ThemeProvider>
+                </WagmiProvider>
             </QueryClientProvider>
         </PrivyProvider>
     );
