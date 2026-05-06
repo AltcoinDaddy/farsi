@@ -115,11 +115,11 @@ export default function EarnScreen() {
             });
             addNotification({
                 title: 'Withdrawal Complete',
-                description: `Withdrew ${amount} cUSD from your savings vault`,
+                description: `Withdrew ${amount} cUSD from your savings balance`,
                 type: 'success',
                 icon: 'account_balance_wallet'
             });
-            router.push(createReceiptUrl(amount, 'Withdrew from Vault', withdrawHash, feeMode));
+            router.push(createReceiptUrl(amount, 'Withdrew from Savings', withdrawHash, feeMode));
         } catch (error) {
             console.error('Withdraw failed:', error);
             toast.error('Withdrawal failed', {
@@ -179,15 +179,15 @@ export default function EarnScreen() {
             // Final refresh
             await Promise.all([refetchCUSD(), refetchVault()]);
             toast.success('Deposit successful!', {
-                description: `Successfully saved ${amount} cUSD in the vault.`,
+                description: `Successfully moved ${amount} cUSD into your savings balance.`,
             });
             addNotification({
-                title: 'Deposit Successful',
-                description: `Saved ${amount} cUSD in your vault`,
+                title: 'Savings Updated',
+                description: `Saved ${amount} cUSD in your balance`,
                 type: 'success',
                 icon: 'savings'
             });
-            router.push(createReceiptUrl(amount, 'Saved in Vault', depositHash, feeMode));
+            router.push(createReceiptUrl(amount, 'Saved in Balance', depositHash, feeMode));
         } catch (error) {
             console.error('Deposit flow failed:', error);
             toast.error('Deposit failed', {
@@ -205,8 +205,8 @@ export default function EarnScreen() {
         <div className="bg-white dark:bg-[#1A1D2E] text-neutral-dark min-h-screen flex flex-col p-4 space-y-6">
             <header className="flex justify-between items-center mb-2">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Earn Yield</h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Save stablecoins on Celo Sepolia</p>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Save</h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Set aside stablecoins on Celo Sepolia</p>
                 </div>
                 <div className="w-10 h-10 bg-success-light rounded-full flex items-center justify-center text-success">
                     <span className="material-symbols-outlined">payments</span>
@@ -215,34 +215,34 @@ export default function EarnScreen() {
 
             {/* Total Balance Card */}
             <div className="bg-success text-white rounded-2xl p-6 shadow-lg shadow-success/20">
-                <p className="text-success-light/80 text-xs font-bold uppercase tracking-wider mb-1">Your Vault Value</p>
+                <p className="text-success-light/80 text-xs font-bold uppercase tracking-wider mb-1">Your Savings Balance</p>
                 <div className="flex items-baseline gap-1">
                     <h2 className="text-4xl font-bold mb-4">${formattedVault}</h2>
                     <span className="text-success-light text-sm mb-4">cUSD</span>
                 </div>
                 <div className="flex gap-4 border-t border-white/20 pt-4">
                     <div>
-                        <p className="text-success-light/60 text-[10px] uppercase font-bold">Estimated APY</p>
+                        <p className="text-success-light/60 text-[10px] uppercase font-bold">Estimated Growth</p>
                         <p className="font-bold text-sm">{displayApy}%*</p>
                     </div>
                     <div className="flex-1">
-                        <p className="text-success-light/60 text-[10px] uppercase font-bold text-right">Shares Balance</p>
+                        <p className="text-success-light/60 text-[10px] uppercase font-bold text-right">Reserve Units</p>
                         <p className="font-bold text-sm text-right">{vaultShares} fYV</p>
                     </div>
                 </div>
             </div>
 
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-800">Demo Yield Model</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-800">Demo Savings Model</p>
                 <p className="mt-1 text-xs font-bold leading-relaxed text-amber-900">
-                    This vault uses simulated on-chain yield for testing. The APY shown here is not sourced from a live external lending protocol yet.
+                    This savings balance uses simulated on-chain growth for testing. The displayed rate is not sourced from a live external lending protocol yet.
                 </p>
             </div>
 
             {/* Amount Input */}
             <div className="space-y-3">
                 <div className="flex justify-between items-center px-1">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Amount to Save</label>
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Amount to Set Aside</label>
                     <span className="text-[10px] text-slate-400 font-bold">Wallet: {formattedCUSD} cUSD</span>
                 </div>
                 <div className="relative group">
@@ -295,17 +295,17 @@ export default function EarnScreen() {
                         disabled={isUpdating || !amountValidation.ok}
                         className="bg-primary text-white py-5 rounded-3xl font-black text-lg shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50 active:scale-95"
                     >
-                    {isUpdating ? 'Saving...' : 'Deposit'}
+                        {isUpdating ? 'Saving...' : 'Deposit'}
                 </button>
             </div>
 
             {/* Strategy Info */}
             <div className="flex-1 pb-12">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Vault Details</h3>
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Savings Details</h3>
                 <div className="bg-slate-50 dark:bg-[#151825] rounded-2xl p-4 space-y-4 border border-slate-100 dark:border-[#2D3348]">
                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-500 dark:text-slate-400 font-medium">Protocol Standard</span>
-                        <span className="font-bold text-slate-900 dark:text-white italic tracking-tight">ERC-4626</span>
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Savings Engine</span>
+                        <span className="font-bold text-slate-900 dark:text-white italic tracking-tight">Onchain Reserve</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-500 dark:text-slate-400 font-medium">Risk Profile</span>
@@ -316,7 +316,7 @@ export default function EarnScreen() {
                 </div>
                 <div className="mt-4 p-4 bg-primary/5 rounded-2xl border border-primary/10">
                     <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                        Yield accrues from the demo vault logic in the contract, while deposits remain backed by the underlying stable token held in the vault.
+                        Growth is simulated by the current contract logic, while deposits remain backed by the underlying stable token held in the savings reserve.
                     </p>
                 </div>
             </div>
