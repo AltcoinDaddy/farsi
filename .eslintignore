@@ -1,0 +1,4 @@
+.next
+artifacts
+cache
+public/sw.js

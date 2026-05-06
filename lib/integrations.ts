@@ -1,12 +1,11 @@
 /**
- * Farsi Integration Snippets
- * For PL Genesis Hackathon Preview
+ * Farsi integration snippets
+ * These are illustrative demo stubs, not production integrations.
  */
 
 export const Integrations = {
     /**
-     * Ramp Network Widget Embed
-     * Configured for Flow EVM
+     * Ramp widget example for preview builds.
      */
     rampWidget: `
         new RampInstantSDK({
@@ -19,8 +18,8 @@ export const Integrations = {
     `,
 
     /**
-     * Flow EVM Paymaster Sponsored Tx Logic
-     * Uses Flow's native gas abstraction features
+     * Conceptual sponsorship example.
+     * This is a placeholder until a real paymaster path is wired in.
      */
     sponsoredTx: `
         // Flow EVM Sponsorship Implementation (Conceptual Stub)

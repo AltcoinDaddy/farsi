@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { useAccount, useReadContract } from 'wagmi';
+import { useReadContract } from 'wagmi';
 import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import YieldVaultABI from '@/lib/abi/YieldVault.json';
@@ -14,18 +14,18 @@ import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { toast } from 'sonner';
 import { useNotifications } from '@/lib/notification-context';
+import { createReceiptUrl } from '@/lib/receipts';
+import { useActiveWalletAddress } from '@/lib/active-wallet';
+import { getErrorMessage, validateTokenAmount } from '@/lib/transaction-validation';
 
 export default function EarnScreen() {
     const router = useRouter();
-    const { user } = usePrivy();
-    const { address: wagmiAddress } = useAccount();
-    const { writeContractAsync } = useSponsoredWriteContract();
+    const { address } = useActiveWalletAddress();
+    const { writeContractAsync, feeMode } = useSponsoredWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [amount, setAmount] = React.useState('100');
     const { addNotification } = useNotifications();
-    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as
-        | `0x${string}`
-        | undefined;
+    const amountValidation = validateTokenAmount(amount);
 
     // Fetch mUSDC balance
     const { data: usdcBalance, refetch: refetchUSDC } = useReadContract({
@@ -68,6 +68,15 @@ export default function EarnScreen() {
         args: address ? [address, CONTRACT_ADDRESSES.YieldVault] : undefined,
         query: { enabled: !!address },
     });
+    const usdcBalanceValue = typeof usdcBalance === 'bigint' ? usdcBalance : 0n;
+    const vaultBalanceValue = typeof vaultBalance === 'bigint' ? vaultBalance : 0n;
+    const assetsValueAmount = typeof assetsValue === 'bigint' ? assetsValue : 0n;
+    const currentApy = typeof currentApyBps === 'bigint' ? currentApyBps : 450n;
+    const allowanceValue = typeof allowance === 'bigint' ? allowance : 0n;
+
+    type FaucetResponse = {
+        message?: string;
+    };
 
     const handleFaucet = async () => {
         if (!address) return;
@@ -82,7 +91,9 @@ export default function EarnScreen() {
                 body: JSON.stringify({ address }),
             });
 
-            const data = await response.json().catch(() => null);
+            const data = await response
+                .json()
+                .catch<null>(() => null) as FaucetResponse | null;
 
             if (!response.ok) {
                 throw new Error(
@@ -115,9 +126,13 @@ export default function EarnScreen() {
 
     const handleWithdraw = async () => {
         if (!address || !amount) return;
+        if (!amountValidation.ok) {
+            toast.error('Invalid amount', {
+                description: amountValidation.message,
+            });
+            return;
+        }
         setIsUpdating(true);
-
-        const withdrawAmount = parseUnits(amount, 18);
 
         try {
             console.log('Withdrawing from vault...');
@@ -126,7 +141,7 @@ export default function EarnScreen() {
                 address: CONTRACT_ADDRESSES.YieldVault as `0x${string}`,
                 abi: YieldVaultABI,
                 functionName: 'withdraw',
-                args: [withdrawAmount, address, address],
+                args: [amountValidation.amountWei, address, address],
                 account: address,
                 chain: flowEVMTestnet,
             });
@@ -141,32 +156,38 @@ export default function EarnScreen() {
                 type: 'success',
                 icon: 'account_balance_wallet'
             });
-            router.push(`/receipt?amount=${amount}&type=${encodeURIComponent('Withdrew from Vault')}&hash=${withdrawHash}`);
+            router.push(createReceiptUrl(amount, 'Withdrew from Vault', withdrawHash, feeMode));
         } catch (error) {
             console.error('Withdraw failed:', error);
             toast.error('Withdrawal failed', {
-                description: 'Insufficient vault balance or transaction rejected.',
+                description: getErrorMessage(
+                    error,
+                    'Insufficient vault balance or transaction rejected.'
+                ),
             });
         } finally {
             setIsUpdating(false);
         }
     };
 
-    const formattedUSDC = usdcBalance ? parseFloat(formatUnits(usdcBalance as bigint, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
-    const formattedVault = assetsValue ? parseFloat(formatUnits(assetsValue as bigint, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
-    const vaultShares = vaultBalance ? parseFloat(formatUnits(vaultBalance as bigint, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
-    const displayApy = currentApyBps ? (Number(currentApyBps) / 100).toFixed(1) : '4.5';
+    const formattedUSDC = parseFloat(formatUnits(usdcBalanceValue, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedVault = parseFloat(formatUnits(assetsValueAmount, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const vaultShares = parseFloat(formatUnits(vaultBalanceValue, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const displayApy = (Number(currentApy) / 100).toFixed(1);
 
     const handleDeposit = async () => {
         if (!address || !amount) return;
+        if (!amountValidation.ok) {
+            toast.error('Invalid amount', {
+                description: amountValidation.message,
+            });
+            return;
+        }
         setIsUpdating(true);
-
-        const depositAmount = parseUnits(amount, 18);
 
         try {
             // Step 1: Check and Approve if needed
-            const currentAllowance = (allowance as bigint) || 0n;
-            if (currentAllowance < depositAmount) {
+            if (allowanceValue < amountValidation.amountWei) {
                 console.log('Insufficient allowance, approving...');
                 const approveHash = await writeContractAsync({
                     address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
@@ -186,7 +207,7 @@ export default function EarnScreen() {
                 address: CONTRACT_ADDRESSES.YieldVault as `0x${string}`,
                 abi: YieldVaultABI,
                 functionName: 'deposit',
-                args: [depositAmount, address],
+                args: [amountValidation.amountWei, address],
                 account: address,
                 chain: flowEVMTestnet,
             });
@@ -203,11 +224,14 @@ export default function EarnScreen() {
                 type: 'success',
                 icon: 'savings'
             });
-            router.push(`/receipt?amount=${amount}&type=${encodeURIComponent('Saved in Vault')}&hash=${depositHash}`);
+            router.push(createReceiptUrl(amount, 'Saved in Vault', depositHash, feeMode));
         } catch (error) {
             console.error('Deposit flow failed:', error);
             toast.error('Deposit failed', {
-                description: 'Please ensure you have enough balance and try again.',
+                description: getErrorMessage(
+                    error,
+                    'Please ensure you have enough balance and try again.'
+                ),
             });
         } finally {
             setIsUpdating(false);
@@ -219,7 +243,7 @@ export default function EarnScreen() {
             <header className="flex justify-between items-center mb-2">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Earn Yield</h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Put your assets to work</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Simulated vault yield for test funds</p>
                 </div>
                 <div className="w-10 h-10 bg-success-light rounded-full flex items-center justify-center text-success">
                     <span className="material-symbols-outlined">payments</span>
@@ -243,6 +267,13 @@ export default function EarnScreen() {
                         <p className="font-bold text-sm text-right">{vaultShares} fYV</p>
                     </div>
                 </div>
+            </div>
+
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-800">Demo Yield Model</p>
+                <p className="mt-1 text-xs font-bold leading-relaxed text-amber-900">
+                    This vault uses simulated on-chain yield for testing. The APY shown here is not sourced from a live external lending protocol yet.
+                </p>
             </div>
 
             {/* Amount Input */}
@@ -289,18 +320,18 @@ export default function EarnScreen() {
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-4">
-                <button
-                    onClick={handleWithdraw}
-                    disabled={isUpdating || !amount || parseFloat(amount) <= 0 || !vaultBalance || (vaultBalance as bigint) === 0n}
-                    className="bg-slate-100 dark:bg-[#1E2235] text-slate-900 dark:text-white py-5 rounded-3xl font-black text-lg hover:bg-slate-200 dark:hover:bg-[#252A3A] transition-all disabled:opacity-50 active:scale-95 border border-transparent dark:border-[#2D3348]"
-                >
-                    Withdraw
-                </button>
-                <button
-                    onClick={handleDeposit}
-                    disabled={isUpdating || !amount || parseFloat(amount) <= 0}
-                    className="bg-primary text-white py-5 rounded-3xl font-black text-lg shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50 active:scale-95"
-                >
+                    <button
+                        onClick={handleWithdraw}
+                        disabled={isUpdating || !amountValidation.ok || vaultBalanceValue === 0n}
+                        className="bg-slate-100 dark:bg-[#1E2235] text-slate-900 dark:text-white py-5 rounded-3xl font-black text-lg hover:bg-slate-200 dark:hover:bg-[#252A3A] transition-all disabled:opacity-50 active:scale-95 border border-transparent dark:border-[#2D3348]"
+                    >
+                        Withdraw
+                    </button>
+                    <button
+                        onClick={handleDeposit}
+                        disabled={isUpdating || !amountValidation.ok}
+                        className="bg-primary text-white py-5 rounded-3xl font-black text-lg shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50 active:scale-95"
+                    >
                     {isUpdating ? 'Saving...' : 'Deposit'}
                 </button>
             </div>
@@ -322,7 +353,7 @@ export default function EarnScreen() {
                 </div>
                 <div className="mt-4 p-4 bg-primary/5 rounded-2xl border border-primary/10">
                     <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                        Your yield is generated automatically by the YieldVault smart contract. All deposits are backed 1:1 by underlying mUSDC assets.
+                        Yield accrues from the demo vault logic in the contract, while deposits remain backed by the underlying mUSDC held in the vault.
                     </p>
                 </div>
             </div>

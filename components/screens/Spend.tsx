@@ -1,10 +1,9 @@
 'use client';
 
 import React from 'react';
-import { usePrivy } from '@privy-io/react-auth';
 import { ChevronLeft, ShoppingBag, Wifi, Car, Coffee, MoreHorizontal, Wallet } from 'lucide-react';
 import Link from 'next/link';
-import { useAccount, useReadContract } from 'wagmi';
+import { useReadContract } from 'wagmi';
 import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { parseUnits, formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
@@ -14,15 +13,15 @@ import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { createReceiptUrl } from '@/lib/receipts';
+import { useActiveWalletAddress } from '@/lib/active-wallet';
 
 import YieldVaultABI from '@/lib/abi/YieldVault.json';
 
 export default function SpendScreen() {
     const router = useRouter();
-    const { user } = usePrivy();
-    const { address: wagmiAddress } = useAccount();
-    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as `0x${string}`;
-    const { writeContractAsync } = useSponsoredWriteContract();
+    const { address } = useActiveWalletAddress();
+    const { writeContractAsync, feeMode } = useSponsoredWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [autoSave, setAutoSave] = React.useState(true);
 
@@ -123,7 +122,15 @@ export default function SpendScreen() {
             });
 
             // Redirect to receipt
-            router.push(`/receipt?amount=${amount}&type=${encodeURIComponent(category + ' Gift Card')}&hash=${buyHash}${changeAmount > 0 ? `&saved=${changeAmount.toFixed(2)}` : ''}`);
+            router.push(
+                createReceiptUrl(
+                    amount.toString(),
+                    `${category} Gift Card`,
+                    buyHash,
+                    feeMode,
+                    changeAmount > 0 ? { saved: changeAmount.toFixed(2) } : undefined
+                )
+            );
         } catch (error) {
             console.error('Spend flow failed:', error);
             toast.error('Transaction failed', {
@@ -134,9 +141,11 @@ export default function SpendScreen() {
         }
     };
 
-    const formattedUSDC = usdcBalance ? parseFloat(formatUnits(usdcBalance as bigint, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
-    const merchantSummary = merchantWallet
-        ? `${(merchantWallet as string).slice(0, 6)}...${(merchantWallet as string).slice(-4)}`
+    const usdcBalanceValue = typeof usdcBalance === 'bigint' ? usdcBalance : 0n;
+    const merchantAddress = typeof merchantWallet === 'string' ? merchantWallet : undefined;
+    const formattedUSDC = parseFloat(formatUnits(usdcBalanceValue, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const merchantSummary = merchantAddress
+        ? `${merchantAddress.slice(0, 6)}...${merchantAddress.slice(-4)}`
         : 'Loading merchant wallet...';
 
     return (

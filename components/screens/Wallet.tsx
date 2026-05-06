@@ -2,13 +2,13 @@
 
 import React from 'react';
 import { ArrowUpRight, ArrowDownLeft, Wallet as WalletIcon, History, ExternalLink } from 'lucide-react';
-import { usePrivy } from '@privy-io/react-auth';
 import Link from 'next/link';
-import { useAccount, useBalance, usePublicClient } from 'wagmi';
-import { formatUnits, parseAbiItem } from 'viem';
+import { useBalance } from 'wagmi';
+import { formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
-
-const TRANSFER_EVENT = parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)');
+import { useActiveWalletAddress } from '@/lib/active-wallet';
+import { useFlowUsdPrice } from '@/lib/use-flow-price';
+import { useUsdcTransferHistory } from '@/lib/use-usdc-transfer-history';
 
 function timeAgo(date: number | Date) {
     const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
@@ -27,12 +27,9 @@ function timeAgo(date: number | Date) {
 }
 
 export default function WalletScreen() {
-    const { user } = usePrivy();
-    const { address: wagmiAddress } = useAccount();
-    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as `0x${string}`;
-    const publicClient = usePublicClient();
-    const [transactions, setTransactions] = React.useState<any[]>([]);
-    const [isLoadingHistory, setIsLoadingHistory] = React.useState(false);
+    const { address } = useActiveWalletAddress();
+    const { flowUsdPrice } = useFlowUsdPrice();
+    const { transactions, isLoadingHistory } = useUsdcTransferHistory(address, 10);
 
     // Fetch FLOW balance
     const { data: flowBalance } = useBalance({
@@ -44,64 +41,6 @@ export default function WalletScreen() {
         address,
         token: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
     });
-
-    // Fetch recent mUSDC transfers
-    React.useEffect(() => {
-        if (!address || !publicClient) return;
-
-        const fetchLogs = async () => {
-            setIsLoadingHistory(true);
-            try {
-                // Flow EVM testnet log query limits to 10k blocks. 
-                const blockNumber = await publicClient.getBlockNumber();
-                const fromBlock = blockNumber > 9000n ? blockNumber - 9000n : 0n;
-
-                // Fetch outgoing transfers
-                const sentLogs = await publicClient.getLogs({
-                    address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-                    event: TRANSFER_EVENT,
-                    args: { from: address },
-                    fromBlock,
-                });
-
-                // Fetch incoming transfers
-                const receivedLogs = await publicClient.getLogs({
-                    address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-                    event: TRANSFER_EVENT,
-                    args: { to: address },
-                    fromBlock,
-                });
-
-                const allLogs = [...sentLogs, ...receivedLogs]
-                    .sort((a, b) => Number((b.blockNumber || 0n) - (a.blockNumber || 0n)))
-                    .slice(0, 10); // Last 10 txs
-
-                // Fetch timestamps for the top 10 logs
-                const logsWithTime = await Promise.all(
-                    allLogs.map(async (log) => {
-                        let timestamp = Date.now();
-                        try {
-                            if (log.blockNumber) {
-                                const block = await publicClient.getBlock({ blockNumber: log.blockNumber });
-                                timestamp = Number(block.timestamp) * 1000;
-                            }
-                        } catch (e) {
-                            console.error('Failed to parse block time for', log.blockHash);
-                        }
-                        return { ...log, timestamp };
-                    })
-                );
-
-                setTransactions(logsWithTime);
-            } catch (err) {
-                console.error('Failed to fetch transaction history:', err);
-            } finally {
-                setIsLoadingHistory(false);
-            }
-        };
-
-        fetchLogs();
-    }, [address, publicClient]);
 
     const assets = [
         {
@@ -116,7 +55,7 @@ export default function WalletScreen() {
             name: 'Flow',
             symbol: 'FLOW',
             balance: flowBalance ? parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : '0.00',
-            value: flowBalance ? `$${(parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)) * 0.76).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00',
+            value: flowBalance ? `$${(parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)) * flowUsdPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00',
             icon: 'F',
             color: 'bg-[#27AE60]'
         },
@@ -124,7 +63,7 @@ export default function WalletScreen() {
 
     const totalValue = (
         (usdcBalance ? parseFloat(formatUnits(usdcBalance.value, usdcBalance.decimals)) : 0) +
-        (flowBalance ? parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)) * 0.76 : 0)
+        (flowBalance ? parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)) * flowUsdPrice : 0)
     ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     return (

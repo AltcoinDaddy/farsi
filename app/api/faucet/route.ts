@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Contract, JsonRpcProvider, Wallet, parseUnits } from 'ethers';
+import {
+    Contract,
+    type InterfaceAbi,
+    JsonRpcProvider,
+    Wallet,
+    parseUnits,
+} from 'ethers';
 import { isAddress } from 'viem';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
@@ -10,7 +16,19 @@ export const runtime = 'nodejs';
 const FAUCET_AMOUNT = parseUnits('1000', 18);
 const FAUCET_COOLDOWN_MS = 10 * 60 * 1000;
 const faucetClaims = new Map<string, number>();
-const mockUsdcAbi = MockUSDCABI as any;
+const mockUsdcAbi = MockUSDCABI as InterfaceAbi;
+
+type FaucetRequestBody = {
+    address?: string;
+};
+
+type FaucetTokenContract = Contract & {
+    owner(): Promise<string>;
+    mint(
+        address: `0x${string}`,
+        amount: bigint
+    ): Promise<{ hash: string; wait(): Promise<unknown> }>;
+};
 
 function getConfiguredPrivateKey() {
     const rawKey = process.env.FAUCET_PRIVATE_KEY || process.env.PRIVATE_KEY;
@@ -21,7 +39,7 @@ function getConfiguredPrivateKey() {
 
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
+        const body = (await request.json()) as FaucetRequestBody;
         const address = body?.address;
 
         if (!isAddress(address)) {
@@ -63,7 +81,7 @@ export async function POST(request: NextRequest) {
             CONTRACT_ADDRESSES.mUSDC,
             mockUsdcAbi,
             wallet
-        );
+        ) as FaucetTokenContract;
 
         const owner = await tokenContract.owner();
 

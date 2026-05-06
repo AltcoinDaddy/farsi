@@ -30,7 +30,7 @@ Don't let your money sit idle. Farsi Earn connects you to yield-generating vault
 Project savings, group gifts, or trip funds—on-chain. Create a "Social Pot," set a goal, and invite friends to contribute. It’s transparent, social, and the money is only accessible once the group hits the target.
 
 ###  **Global Send**
-Seamless P2P transfers. Send mUSDC to anyone on Flow instantly. With **sponsored transactions**, the fees are on us. You just click and go.
+Seamless P2P transfers. Send mUSDC to anyone on Flow instantly. When smart-account sponsorship is configured, the app can use that path for fees; otherwise the wallet pays standard Flow testnet gas.
 
 ###  **Integrated Spend**
 The "closed loop" of DeFi. Use your mUSDC to purchase gift cards for **Shopping, Travel, and Lifestyle**. Get a dynamic digital receipt for every purchase and spend your digital earnings in the real world.
@@ -41,7 +41,7 @@ The "closed loop" of DeFi. Use your mUSDC to purchase gift cards for **Shopping,
 
 We’ve hidden the complexity of blockchain behind a premium interface:
 
-- **No More "Gas"**: Thanks to Flow EVM's sponsored transactions, users never have to hold native tokens just to pay for network fees.
+- **Flexible Gas Handling**: The app can use a configured sponsorship path for supported setups, or fall back to standard Flow testnet gas when sponsorship is not enabled.
 - **Log in your way**: Use your email or social media through **Privy**. Behind the scenes, we create a secure **Smart Account** for you instantly.
 - **Always With You**: Farsi is a Progressive Web App (PWA). Just "Add to Home Screen" and it feels just like a native app.
 - **Premium UX**: Smooth transitions, vibrant toast notifications (`sonner`), and high-fidelity receipts.
@@ -81,11 +81,13 @@ Create a `.env.local` file in the root:
 NEXT_PUBLIC_WC_PROJECT_ID=your_id
 NEXT_PUBLIC_PRIVY_APP_ID=your_id
 NEXT_PUBLIC_ZERODEV_PROJECT_ID=your_id
+NEXT_PUBLIC_ENABLE_SPONSORED_TRANSACTIONS=false
 NEXT_PUBLIC_FLOW_RPC=https://testnet.evm.nodes.onflow.org
 FAUCET_PRIVATE_KEY=your_contract_owner_private_key
 ```
 
 `FAUCET_PRIVATE_KEY` is optional for general app usage, but it is required if you want the in-app `Get Test Funds` faucet on the Earn screen to mint test mUSDC for regular users.
+`NEXT_PUBLIC_ENABLE_SPONSORED_TRANSACTIONS` should only be turned on when the smart-account sponsorship path is fully configured for the current environment.
 
 ### 4. Run
 ```bash

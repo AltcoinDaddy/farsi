@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getPrivyWalletAddress } from '@/lib/active-wallet';
 
 export default function Onboarding() {
     const { login, ready, authenticated, user } = usePrivy();
@@ -75,11 +76,11 @@ export default function Onboarding() {
                         <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">Almost there!</h1>
                         <p className="text-neutral-muted font-medium leading-relaxed">
                             Authenticated as <span className="text-neutral-dark font-bold">{user?.email?.address}</span>.
-                            We've created a unique smart account for you on Flow EVM.
+                            We&apos;ve created a unique smart account for you on Flow EVM.
                         </p>
                         <div className="bg-background-light p-4 rounded-xl border border-gray-100">
                             <p className="text-[10px] uppercase font-bold text-neutral-muted mb-1">Your Smart Account</p>
-                            <p className="text-xs font-mono text-neutral-dark truncate">{user?.smartWallet?.address || user?.wallet?.address}</p>
+                            <p className="text-xs font-mono text-neutral-dark truncate">{getPrivyWalletAddress(user)}</p>
                         </div>
                         <button onClick={() => setStep(3)} className="w-full bg-primary text-white font-bold py-4 rounded-xl mt-8 shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all">
                             Finalize Profile
@@ -92,7 +93,7 @@ export default function Onboarding() {
                         <div className="mx-auto w-20 h-20 bg-success-light rounded-full flex items-center justify-center text-success mb-8 shadow-sm">
                             <span className="material-symbols-outlined !text-4xl material-symbols-filled">verified_user</span>
                         </div>
-                        <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">You're all set!</h1>
+                        <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">You&apos;re all set!</h1>
                         <p className="text-neutral-muted font-medium leading-relaxed">Your smart account is secure and ready for your first deposit.</p>
                         <div className="pt-8 space-y-4">
                             <Link
