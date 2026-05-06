@@ -4,9 +4,17 @@ import { useState, useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ChevronRight, ShieldCheck, User, Wallet } from 'lucide-react';
 import { useAccount, useConnect } from 'wagmi';
 import { getPrivyWalletAddress } from '@/lib/active-wallet';
 import { useMiniPay } from '@/lib/minipay';
+
+const PREVIEW_SESSION_KEY = 'farsi_preview_session';
+
+function canUseLocalPreview() {
+    if (typeof window === 'undefined') return false;
+    return process.env.NODE_ENV !== 'production' || window.location.hostname === 'localhost';
+}
 
 export default function Onboarding() {
     const { login, ready, authenticated, user } = usePrivy();
@@ -18,6 +26,7 @@ export default function Onboarding() {
     const router = useRouter();
     const activeAddress = address || getPrivyWalletAddress(user);
     const hasIdentitySession = authenticated || !!address;
+    const showPreviewFallback = !isMiniPay && !ready && canUseLocalPreview();
 
     // Sync step with auth state
     useEffect(() => {
@@ -32,6 +41,12 @@ export default function Onboarding() {
 
     const completeOnboarding = () => {
         localStorage.setItem('farsi_onboarded', 'true');
+    };
+
+    const handlePreviewApp = () => {
+        localStorage.setItem(PREVIEW_SESSION_KEY, 'true');
+        completeOnboarding();
+        router.push('/');
     };
 
     const handleWalletContinue = () => {
@@ -65,7 +80,7 @@ export default function Onboarding() {
                 {!loading && step === 1 && (
                     <div className="space-y-6">
                         <div className="w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center text-primary mb-8 shadow-sm">
-                            <span className="material-symbols-outlined !text-4xl">account_balance_wallet</span>
+                            <Wallet size={32} strokeWidth={2.25} />
                         </div>
                         <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">Welcome to Farsi</h1>
                         <p className="text-neutral-muted font-medium leading-relaxed">
@@ -83,7 +98,7 @@ export default function Onboarding() {
                                     className="w-full bg-primary text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all disabled:opacity-50"
                                 >
                                     {isPending ? 'Connecting Wallet...' : 'Continue with MiniPay'}
-                                    <span className="material-symbols-outlined">chevron_right</span>
+                                    <ChevronRight size={18} />
                                 </button>
                             ) : (
                                 <button
@@ -92,7 +107,16 @@ export default function Onboarding() {
                                     className="w-full bg-primary text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all"
                                 >
                                     {ready ? 'Continue with Email / Social' : 'Preparing Sign-In...'}
-                                    <span className="material-symbols-outlined">chevron_right</span>
+                                    <ChevronRight size={18} />
+                                </button>
+                            )}
+                            {showPreviewFallback && (
+                                <button
+                                    onClick={handlePreviewApp}
+                                    className="w-full mt-3 border border-slate-200 text-neutral-dark font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-all"
+                                >
+                                    Preview the App
+                                    <ChevronRight size={18} />
                                 </button>
                             )}
                             <p className="text-center text-[10px] text-neutral-muted mt-4">
@@ -100,7 +124,9 @@ export default function Onboarding() {
                                     ? 'Farsi connects automatically inside MiniPay when an injected wallet is available.'
                                     : ready
                                         ? 'Built for mobile-first stablecoin saving on Celo.'
-                                        : 'The sign-in button will unlock as soon as the secure auth client is ready.'}
+                                        : showPreviewFallback
+                                            ? 'If the local auth client is slow in this browser, you can preview the app directly.'
+                                            : 'The sign-in button will unlock as soon as the secure auth client is ready.'}
                             </p>
                         </div>
                     </div>
@@ -109,7 +135,7 @@ export default function Onboarding() {
                 {!loading && (ready || isMiniPay) && step === 2 && (
                     <div className="space-y-6">
                         <div className="w-16 h-16 bg-success-light rounded-2xl flex items-center justify-center text-success mb-8 shadow-sm">
-                            <span className="material-symbols-outlined !text-4xl">person</span>
+                            <User size={32} strokeWidth={2.25} />
                         </div>
                         <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">Almost there!</h1>
                         <p className="text-neutral-muted font-medium leading-relaxed">
@@ -140,7 +166,7 @@ export default function Onboarding() {
                 {!loading && (ready || isMiniPay) && step === 3 && (
                     <div className="space-y-6 text-center">
                         <div className="mx-auto w-20 h-20 bg-success-light rounded-full flex items-center justify-center text-success mb-8 shadow-sm">
-                            <span className="material-symbols-outlined !text-4xl material-symbols-filled">verified_user</span>
+                            <ShieldCheck size={36} strokeWidth={2.25} />
                         </div>
                         <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">You&apos;re all set!</h1>
                         <p className="text-neutral-muted font-medium leading-relaxed">Your smart account is secure and ready for your first deposit.</p>
