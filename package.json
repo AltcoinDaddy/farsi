@@ -6,7 +6,8 @@
         "dev": "next dev -p 3001",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "test:contracts": "hardhat test"
     },
     "dependencies": {
         "@privy-io/react-auth": "3.12.0",
@@ -45,6 +46,8 @@
         "autoprefixer": "^10.0.1",
         "chai": "^4.5.0",
         "dotenv": "^17.3.1",
+        "eslint": "^8.57.0",
+        "eslint-config-next": "^14.1.0",
         "ethers": "^6.16.0",
         "hardhat": "^2.22.1",
         "hardhat-gas-reporter": "^1.0.10",

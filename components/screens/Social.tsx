@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useReadContract, useAccount } from 'wagmi';
+import { useReadContract } from 'wagmi';
 import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import SharedPotFactoryABI from '@/lib/abi/SharedPotFactory.json';
@@ -11,22 +11,25 @@ import { formatUnits, parseUnits } from 'viem';
 import { flowEVMTestnet } from '@/lib/web3-config';
 import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
-import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { createReceiptUrl } from '@/lib/receipts';
+import { useActiveWalletAddress } from '@/lib/active-wallet';
+import { getErrorMessage, validateTokenAmount } from '@/lib/transaction-validation';
 
 import { QRCodeSVG } from 'qrcode.react';
 
+type PotAddress = `0x${string}`;
+
 export default function SocialScreen() {
     const router = useRouter();
-    const { user } = usePrivy();
-    const { address: wagmiAddress } = useAccount();
-    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as `0x${string}`;
-    const { writeContractAsync } = useSponsoredWriteContract();
+    const { address } = useActiveWalletAddress();
+    const { writeContractAsync, feeMode } = useSponsoredWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [showModal, setShowModal] = React.useState(false);
     const [potName, setPotName] = React.useState('');
     const [potTarget, setPotTarget] = React.useState('500');
+    const potTargetValidation = validateTokenAmount(potTarget);
 
     // Fetch all pots from the factory
     const { data: pots, isLoading, refetch: refetchPots } = useReadContract({
@@ -34,9 +37,16 @@ export default function SocialScreen() {
         abi: SharedPotFactoryABI,
         functionName: 'getPots',
     });
+    const potAddresses = Array.isArray(pots) ? (pots as PotAddress[]) : [];
 
     const handleCreatePot = async () => {
         if (!address || !potName || !potTarget) return;
+        if (!potTargetValidation.ok) {
+            toast.error('Invalid target', {
+                description: potTargetValidation.message,
+            });
+            return;
+        }
         setIsUpdating(true);
         const walletAddress = address as `0x${string}`;
 
@@ -46,7 +56,7 @@ export default function SocialScreen() {
                 address: CONTRACT_ADDRESSES.SharedPotFactory as `0x${string}`,
                 abi: SharedPotFactoryABI,
                 functionName: 'createPot',
-                args: [potName, parseUnits(potTarget, 18)],
+                args: [potName, potTargetValidation.amountWei],
                 account: walletAddress,
                 chain: flowEVMTestnet,
             });
@@ -58,7 +68,14 @@ export default function SocialScreen() {
                 description: `Successfully started "${potName}" with a $${potTarget} goal.`,
             });
             // Redirect to receipt for creating the pot
-            router.push(`/receipt?amount=${potTarget}&type=${encodeURIComponent('Created Social Pot: ' + potName)}&hash=${createHash}`);
+            router.push(
+                createReceiptUrl(
+                    potTarget,
+                    'Created Social Pot: ' + potName,
+                    createHash,
+                    feeMode
+                )
+            );
         } catch (error) {
             console.error('Create pot failed:', error);
             toast.error('Failed to create pot', {
@@ -85,6 +102,13 @@ export default function SocialScreen() {
                 </button>
             </header>
 
+            <div className="mx-6 mt-6 rounded-[28px] border border-amber-200 bg-amber-50 p-4 text-amber-900">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em]">Demo Sharing</p>
+                <p className="mt-1 text-xs font-bold leading-relaxed">
+                    Pot creation and contributions are live on testnet. Sharing is still a manual demo flow, so invitees may need the pot address copied below.
+                </p>
+            </div>
+
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto p-6 space-y-6">
                 <div className="space-y-4 pb-24">
@@ -98,7 +122,7 @@ export default function SocialScreen() {
                         </div>
                     )}
 
-                    {!isLoading && (!pots || (pots as any[]).length === 0) && (
+                    {!isLoading && potAddresses.length === 0 && (
                         <div className="text-center py-24 bg-white rounded-[40px] border border-dashed border-slate-200 flex flex-col items-center space-y-6">
                             <div className="size-20 rounded-[32px] bg-slate-50 flex items-center justify-center text-slate-200">
                                 <span className="material-symbols-outlined text-4xl font-black">folder_open</span>
@@ -114,10 +138,9 @@ export default function SocialScreen() {
                         </div>
                     )}
 
-                    {pots &&
-                        (pots as any[]).map((potAddress: string) => (
-                            <PotCard key={potAddress} address={potAddress} />
-                        ))}
+                    {potAddresses.map((potAddress) => (
+                        <PotCard key={potAddress} address={potAddress} />
+                    ))}
                 </div>
             </main>
 
@@ -162,11 +185,11 @@ export default function SocialScreen() {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={handleCreatePot}
-                                disabled={isUpdating || !potName || !potTarget}
-                                className="w-full bg-primary text-white py-6 rounded-[28px] font-black text-lg shadow-2xl shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
-                            >
+                        <button
+                            onClick={handleCreatePot}
+                            disabled={isUpdating || !potName || !potTargetValidation.ok}
+                            className="w-full bg-primary text-white py-6 rounded-[28px] font-black text-lg shadow-2xl shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
+                        >
                                 {isUpdating ? (
                                     <>
                                         <span className="material-symbols-outlined animate-spin">sync</span>
@@ -187,20 +210,22 @@ export default function SocialScreen() {
     );
 }
 
-function PotCard({ address }: { address: string }) {
+function PotCard({ address }: { address: PotAddress }) {
     const router = useRouter();
-    const { user } = usePrivy();
-    const { writeContractAsync } = useSponsoredWriteContract();
+    const { address: activeAddress } = useActiveWalletAddress();
+    const { writeContractAsync, feeMode } = useSponsoredWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
     const [amount, setAmount] = React.useState('10');
     const [showShareModal, setShowShareModal] = React.useState(false);
+    const amountValidation = validateTokenAmount(amount);
 
     // Fetch account allowance for this pot
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
         address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
         abi: MockUSDCABI,
         functionName: 'allowance',
-        args: [user?.smartWallet?.address || user?.wallet?.address, address],
+        args: activeAddress ? [activeAddress, address] : undefined,
+        query: { enabled: !!activeAddress },
     });
 
     const { data: name } = useReadContract({
@@ -226,18 +251,24 @@ function PotCard({ address }: { address: string }) {
         abi: SharedPotABI,
         functionName: 'creator',
     });
+    const allowanceValue = typeof allowance === 'bigint' ? allowance : 0n;
+    const potName = typeof name === 'string' ? name : 'Loading Pot...';
+    const creatorAddress = typeof creator === 'string' ? creator : undefined;
 
     const handleContribute = async () => {
-        const actingAddress = user?.smartWallet?.address || user?.wallet?.address;
-        if (!actingAddress || !amount) return;
+        if (!activeAddress || !amount) return;
+        if (!amountValidation.ok) {
+            toast.error('Invalid amount', {
+                description: amountValidation.message,
+            });
+            return;
+        }
         setIsUpdating(true);
-        const walletAddress = actingAddress as `0x${string}`;
-        const contributeAmount = parseUnits(amount, 18);
+        const walletAddress = activeAddress as `0x${string}`;
 
         try {
             // Step 1: Check and Approve if needed
-            const currentAllowance = (allowance as bigint) || 0n;
-            if (currentAllowance < contributeAmount) {
+            if (allowanceValue < amountValidation.amountWei) {
                 console.log('Insufficient allowance for pot, approving...');
                 const approveHash = await writeContractAsync({
                     address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
@@ -257,7 +288,7 @@ function PotCard({ address }: { address: string }) {
                 address: address as `0x${string}`,
                 abi: SharedPotABI,
                 functionName: 'contribute',
-                args: [contributeAmount],
+                args: [amountValidation.amountWei],
                 account: walletAddress,
                 chain: flowEVMTestnet,
             });
@@ -269,11 +300,21 @@ function PotCard({ address }: { address: string }) {
                 description: `Successfully added ${amount} mUSDC to the pot.`,
             });
             // Redirect to receipt
-            router.push(`/receipt?amount=${amount}&type=${encodeURIComponent('Pot Contribution: ' + name)}&hash=${contributeHash}`);
+            router.push(
+                createReceiptUrl(
+                    amount,
+                    'Pot Contribution: ' + name,
+                    contributeHash,
+                    feeMode
+                )
+            );
         } catch (error) {
             console.error('Contribution flow failed:', error);
             toast.error('Contribution failed', {
-                description: 'Please check your balance and try again.',
+                description: getErrorMessage(
+                    error,
+                    'Please check your balance and try again.'
+                ),
             });
         } finally {
             setIsUpdating(false);
@@ -281,9 +322,9 @@ function PotCard({ address }: { address: string }) {
     };
 
     const handleWithdraw = async () => {
-        if (!user?.smartWallet?.address || user?.wallet?.address) return;
+        if (!activeAddress) return;
         setIsUpdating(true);
-        const walletAddress = user.wallet.address as `0x${string}`;
+        const walletAddress = activeAddress as `0x${string}`;
 
         try {
             console.log('Withdrawing from pot...');
@@ -300,11 +341,21 @@ function PotCard({ address }: { address: string }) {
                 description: 'The pot savings have been transferred to your wallet.',
             });
             // Redirect to receipt
-            router.push(`/receipt?amount=${formatUnits(currentVal, 18)}&type=${encodeURIComponent('Claimed Social Pot: ' + name)}&hash=${withdrawHash}`);
+            router.push(
+                createReceiptUrl(
+                    formatUnits(currentVal, 18),
+                    'Claimed Social Pot: ' + name,
+                    withdrawHash,
+                    feeMode
+                )
+            );
         } catch (error) {
             console.error('Withdraw failed:', error);
             toast.error('Claim failed', {
-                description: 'You may not have the authority to claim this pot yet.',
+                description: getErrorMessage(
+                    error,
+                    'You may not have the authority to claim this pot yet.'
+                ),
             });
         } finally {
             setIsUpdating(false);
@@ -314,10 +365,10 @@ function PotCard({ address }: { address: string }) {
     const targetVal = target ? BigInt(target.toString()) : 0n;
     const currentVal = current ? BigInt(current.toString()) : 0n;
     const progress = targetVal > 0n ? Number((currentVal * 100n) / targetVal) : 0;
-    const isCreator = user?.smartWallet?.address || user?.wallet?.address && creator && user.wallet.address.toLowerCase() === (creator as string).toLowerCase();
-
-    // Generate a deep link for the pot (placeholder URL)
-    const potLink = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}/social?address=${address}` : `https://farsi.app/social?address=${address}`;
+    const isCreator =
+        !!activeAddress &&
+        !!creatorAddress &&
+        activeAddress.toLowerCase() === creatorAddress.toLowerCase();
 
     return (
         <div className="group relative">
@@ -330,7 +381,7 @@ function PotCard({ address }: { address: string }) {
                                 <span className="material-symbols-outlined text-3xl font-black">{progress >= 100 ? 'task_alt' : 'savings'}</span>
                             </div>
                             <div>
-                                <h3 className="text-xl font-black tracking-tight italic">{(name as string) || 'Loading Pot...'}</h3>
+                                <h3 className="text-xl font-black tracking-tight italic">{potName}</h3>
                                 <div className="flex items-center gap-2">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                         Goal: ${target ? formatUnits(targetVal, 18) : '0'}
@@ -380,7 +431,7 @@ function PotCard({ address }: { address: string }) {
                             </div>
                             <button
                                 onClick={handleContribute}
-                                disabled={isUpdating}
+                                disabled={isUpdating || !activeAddress || !amountValidation.ok}
                                 className="flex-[1.5] h-14 bg-primary hover:bg-primary/90 text-white rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95 shadow-xl shadow-primary/20"
                             >
                                 {isUpdating ? (
@@ -419,7 +470,7 @@ function PotCard({ address }: { address: string }) {
 
                                 <div className="p-4 bg-slate-50 rounded-[32px] border-2 border-slate-100 shadow-inner group">
                                     <QRCodeSVG 
-                                        value={potLink} 
+                                        value={address} 
                                         size={200} 
                                         fgColor="#1A1A1A"
                                         includeMargin={true}
@@ -428,20 +479,26 @@ function PotCard({ address }: { address: string }) {
 
                                 <div className="space-y-4 w-full text-center">
                                     <div className="space-y-1">
-                                        <h3 className="text-lg font-black text-slate-900 italic">{(name as string) || 'Social Pot'}</h3>
+                                        <h3 className="text-lg font-black text-slate-900 italic">{potName}</h3>
                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-6 leading-relaxed">
-                                            Scan this code with a Farsi wallet to contribute directly to this pot.
+                                            Share this pot address for the current demo flow. Invitees can paste it into Farsi while deep linking is still being finished.
+                                        </p>
+                                    </div>
+                                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pot Address</p>
+                                        <p className="mt-2 break-all text-[11px] font-mono font-bold text-slate-600">
+                                            {address}
                                         </p>
                                     </div>
                                     <button 
                                         onClick={() => {
-                                            navigator.clipboard.writeText(potLink);
-                                            toast.success('Link copied!', { description: 'Share this link to invite others.' });
+                                            navigator.clipboard.writeText(address);
+                                            toast.success('Address copied!', { description: 'Share this pot address with contributors.' });
                                         }}
                                         className="w-full bg-slate-100 text-slate-900 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-slate-200 transition-all active:scale-95"
                                     >
                                         <span className="material-symbols-outlined text-[14px]">content_copy</span>
-                                        Copy Pot Link
+                                        Copy Pot Address
                                     </button>
                                 </div>
                             </div>

@@ -1,0 +1,11 @@
+{
+  "extends": [
+    "next/core-web-vitals"
+  ],
+  "ignorePatterns": [
+    ".next/",
+    "artifacts/",
+    "cache/",
+    "public/sw.js"
+  ]
+}

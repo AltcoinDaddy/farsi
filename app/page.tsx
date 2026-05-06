@@ -1,10 +1,9 @@
 'use client';
 
-import { usePrivy } from '@privy-io/react-auth';
 import { useBalance } from 'wagmi';
 import Link from 'next/link';
-import { formatUnits, parseAbiItem } from 'viem';
-import { usePublicClient, useReadContract, useAccount } from 'wagmi';
+import { formatUnits } from 'viem';
+import { useReadContract } from 'wagmi';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import YieldVaultABI from '@/lib/abi/YieldVault.json';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
@@ -12,6 +11,9 @@ import { ArrowUpRight, ArrowDownLeft, History, Wallet, Sparkles, TrendingUp } fr
 import React from 'react';
 import { toast } from 'sonner';
 import { useNotifications } from '@/lib/notification-context';
+import { useActiveWalletAddress } from '@/lib/active-wallet';
+import { useFlowUsdPrice } from '@/lib/use-flow-price';
+import { useUsdcTransferHistory } from '@/lib/use-usdc-transfer-history';
 
 function timeAgo(date: Date): string {
     const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -21,43 +23,21 @@ function timeAgo(date: Date): string {
     return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-const TRANSFER_EVENT = parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)');
-
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function DashboardPage() {
-    const { user } = usePrivy();
-    const { address: wagmiAddress } = useAccount();
-    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as `0x${string}`;
+    const { user, address } = useActiveWalletAddress();
     const [showReceiveModal, setShowReceiveModal] = React.useState(false);
     const [showNotifications, setShowNotifications] = React.useState(false);
-    const [flowPrice, setFlowPrice] = React.useState<number | null>(null);
     const { notifications, unreadCount, markAllRead } = useNotifications();
+    const { flowUsdPrice } = useFlowUsdPrice();
+    const { transactions, isLoadingHistory } = useUsdcTransferHistory(address, 3);
 
     const { data: balance, isLoading: isBalanceLoading } = useBalance({
         address: address,
     });
 
     const displayName = user?.email?.address?.split('@')[0] || 'User';
-    const publicClient = usePublicClient();
-    const [transactions, setTransactions] = React.useState<any[]>([]);
-    const [isHistoryLoading, setIsHistoryLoading] = React.useState(false);
-
-    // Fetch FLOW price from CoinGecko
-    React.useEffect(() => {
-        const fetchPrice = async () => {
-            try {
-                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=flow&vs_currencies=usd');
-                const data = await res.json();
-                setFlowPrice(data.flow.usd);
-            } catch (err) {
-                console.error('Failed to fetch FLOW price:', err);
-                // Fallback price if API fails
-                setFlowPrice(0.65); 
-            }
-        };
-        fetchPrice();
-    }, []);
 
     // Fetch mUSDC balance
     const { data: usdcBalance, isLoading: isUsdcLoading } = useReadContract({
@@ -76,48 +56,18 @@ export default function DashboardPage() {
         args: address ? [address] : undefined,
         query: { enabled: !!address },
     });
-
-    // Fetch recent mUSDC transfers (same logic as Wallet.tsx)
-    React.useEffect(() => {
-        if (!address || !publicClient) return;
-
-        const fetchLogs = async () => {
-            setIsHistoryLoading(true);
-            try {
-                const sentLogs = await publicClient.getLogs({
-                    address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-                    event: TRANSFER_EVENT,
-                    args: { from: address },
-                    fromBlock: 'earliest',
-                });
-                const receivedLogs = await publicClient.getLogs({
-                    address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-                    event: TRANSFER_EVENT,
-                    args: { to: address },
-                    fromBlock: 'earliest',
-                });
-                const allLogs = [...sentLogs, ...receivedLogs]
-                    .sort((a, b) => Number((b.blockNumber || 0n) - (a.blockNumber || 0n)))
-                    .slice(0, 3); // Just show top 3 on dashboard
-                setTransactions(allLogs);
-            } catch (err) {
-                console.error('Failed to fetch dashboard history:', err);
-            } finally {
-                setIsHistoryLoading(false);
-            }
-        };
-        fetchLogs();
-    }, [address, publicClient]);
+    const usdcBalanceValue = typeof usdcBalance === 'bigint' ? usdcBalance : 0n;
+    const vaultBalanceValue = typeof vaultBalance === 'bigint' ? vaultBalance : 0n;
 
     const flowVal = balance ? parseFloat(formatUnits(balance.value, balance.decimals)) : 0;
-    const usdcVal = usdcBalance ? parseFloat(formatUnits(usdcBalance as bigint, 18)) : 0;
+    const usdcVal = parseFloat(formatUnits(usdcBalanceValue, 18));
     
     // Calculate Portfolio Value in USD
-    const totalFiatValue = (flowVal * (flowPrice || 0)) + usdcVal;
+    const totalFiatValue = (flowVal * flowUsdPrice) + usdcVal;
 
     const formattedBalance = flowVal.toFixed(2);
     const formattedUsdc = usdcVal.toFixed(2);
-    const hasYield = vaultBalance && (vaultBalance as bigint) > 0n;
+    const hasYield = vaultBalanceValue > 0n;
 
     const handleCopyAddress = () => {
         if (address) {
@@ -229,7 +179,7 @@ export default function DashboardPage() {
                                 <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl self-start">
                                     <div className="size-4 rounded-full bg-primary border-2 border-white flex items-center justify-center text-[8px] font-bold text-white italic">F</div>
                                     <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                                        {formattedBalance} FLOW <span className="text-slate-300 mx-1">/</span> <span className="text-primary">${(flowVal * (flowPrice || 0)).toFixed(2)}</span>
+                                        {formattedBalance} FLOW <span className="text-slate-300 mx-1">/</span> <span className="text-primary">${(flowVal * flowUsdPrice).toFixed(2)}</span>
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl self-start">
@@ -360,7 +310,7 @@ export default function DashboardPage() {
                     </div>
                     
                     <div className="space-y-3">
-                        {isHistoryLoading ? (
+                        {isLoadingHistory ? (
                             <div className="py-12 flex flex-col items-center gap-3">
                                 <div className="size-6 border-2 border-primary/10 border-t-primary rounded-full animate-spin"></div>
                                 <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Syncing Nodes</p>

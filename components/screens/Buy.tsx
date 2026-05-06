@@ -2,15 +2,12 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { usePrivy } from '@privy-io/react-auth';
-import { useAccount } from 'wagmi';
 import { toast } from 'sonner';
+import { useActiveWalletAddress } from '@/lib/active-wallet';
 
 export default function BuyScreen() {
     const router = useRouter();
-    const { user } = usePrivy();
-    const { address: wagmiAddress } = useAccount();
-    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as `0x${string}`;
+    const { address } = useActiveWalletAddress();
     const [usdAmount, setUsdAmount] = React.useState('100');
     const [showSimulation, setShowSimulation] = React.useState(false);
     const [simStep, setSimStep] = React.useState(0);
@@ -31,8 +28,8 @@ export default function BuyScreen() {
         // Launch the actual Ramp window safely
         window.open(rampUrl, '_blank');
         
-        toast.info('Opening Ramp Sandbox', {
-            description: 'Complete your purchase in the secure window.',
+        toast.info('Opening Ramp sandbox', {
+            description: 'This demo opens Ramp test checkout in a new window.',
         });
     };
 
@@ -44,6 +41,18 @@ export default function BuyScreen() {
                     <span className="material-symbols-outlined">arrow_back</span>
                 </button>
                 <h2 className="text-slate-900 text-lg font-black leading-tight tracking-tight flex-1 text-center pr-10">Buy Crypto</h2>
+            </div>
+
+            <div className="mx-6 mt-6 rounded-[28px] border border-amber-200 bg-amber-50 p-4 text-amber-900">
+                <div className="flex items-start gap-3">
+                    <span className="material-symbols-outlined text-xl">science</span>
+                    <div className="space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em]">Sandbox Checkout</p>
+                        <p className="text-xs font-bold leading-relaxed">
+                            This flow opens Ramp&apos;s demo environment. It is meant for UI testing and does not represent a live fiat purchase.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* Progress Steps */}
@@ -89,8 +98,8 @@ export default function BuyScreen() {
                 <div className="space-y-4">
                     <div className="flex justify-between items-center px-1">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest">You receive</label>
-                        <span className="text-[10px] font-black text-success uppercase tracking-widest flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px]">bolt</span> Best Rate
+                        <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">experiment</span> Demo Quote
                         </span>
                     </div>
                     <div className="relative">
@@ -108,7 +117,7 @@ export default function BuyScreen() {
                         </div>
                     </div>
                     <p className="text-[11px] text-slate-400 font-bold px-1 flex items-center gap-2 italic">
-                        1 USD ≈ 0.9845 USDC • Fee included
+                        Sandbox estimate: 1 USD ≈ 0.9845 USDC
                     </p>
                 </div>
 
@@ -120,7 +129,7 @@ export default function BuyScreen() {
                     <div className="flex-1 min-w-0">
                         <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-none mb-1">Deposit To</p>
                         <p className="text-xs font-black text-slate-900 truncate">
-                            {user?.smartWallet?.address || user?.wallet?.address || 'Connecting wallet...'}
+                            {address || 'Connecting wallet...'}
                         </p>
                     </div>
                 </div>
@@ -134,7 +143,7 @@ export default function BuyScreen() {
                     className="w-full bg-primary text-white py-6 rounded-[28px] font-black text-lg shadow-2xl shadow-primary/20 hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
                 >
                     <span className="material-symbols-outlined">payments</span>
-                    Buy with Card
+                    Open Sandbox Checkout
                 </button>
                 <div className="flex items-center justify-center gap-2 mt-4 opacity-40">
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Powered by</span>

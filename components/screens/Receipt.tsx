@@ -2,6 +2,8 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { getReceiptFeeLabel } from '@/lib/receipts';
+import { TransactionFeeMode } from '@/lib/aa-config';
 
 interface ReceiptProps {
     withShare?: boolean;
@@ -13,6 +15,8 @@ function ReceiptContent({ withShare }: ReceiptProps) {
 
     const amount = searchParams.get('amount') || '0.00';
     const type = searchParams.get('type') || 'Transaction';
+    const feeMode = (searchParams.get('fee') as TransactionFeeMode | null) || 'native';
+    const feeLabel = getReceiptFeeLabel(feeMode);
     const date = new Date().toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -65,7 +69,9 @@ function ReceiptContent({ withShare }: ReceiptProps) {
                         </div>
                         <div className="flex justify-between items-center py-1">
                             <span className="text-slate-500 text-sm font-medium">Network Fee</span>
-                            <span className="text-success font-bold text-sm">Sponsored</span>
+                            <span className={`font-bold text-sm ${feeMode === 'configured' ? 'text-primary' : 'text-amber-600'}`}>
+                                {feeLabel}
+                            </span>
                         </div>
                     </div>
                 </div>

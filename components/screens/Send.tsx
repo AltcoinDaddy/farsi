@@ -1,61 +1,78 @@
 'use client';
 
 import React from 'react';
-import { usePrivy } from '@privy-io/react-auth';
 import { ChevronLeft, ArrowUpRight, Search, Wallet } from 'lucide-react';
 import Link from 'next/link';
-import { useAccount, useReadContract, usePublicClient } from 'wagmi';
+import { useReadContract } from 'wagmi';
 import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
-import { parseUnits, formatUnits } from 'viem';
+import { formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
 import { flowEVMTestnet } from '@/lib/web3-config';
 import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { toast } from 'sonner';
+import { useActiveWalletAddress } from '@/lib/active-wallet';
+import { getErrorMessage, validateRecipientAddress, validateTokenAmount } from '@/lib/transaction-validation';
 
 export default function SendScreen() {
-    const { user } = usePrivy();
-    const { address: wagmiAddress } = useAccount();
-    const address = (user?.smartWallet?.address || user?.wallet?.address || wagmiAddress) as `0x${string}`;
+    const { address } = useActiveWalletAddress();
     const { writeContractAsync } = useSponsoredWriteContract();
     const [recipient, setRecipient] = React.useState('');
     const [amount, setAmount] = React.useState('');
     const [isUpdating, setIsUpdating] = React.useState(false);
+    const amountValidation = validateTokenAmount(amount);
+    const recipientValidation = validateRecipientAddress(recipient, address);
 
     // Fetch mUSDC balance for display
     const { data: usdcBalance, refetch: refetchUSDC } = useReadContract({
         address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
         abi: MockUSDCABI,
         functionName: 'balanceOf',
-        args: [address],
+        args: address ? [address] : undefined,
+        query: { enabled: !!address },
     });
 
     const handleTransfer = async () => {
         if (!address || !recipient || !amount) return;
+        if (!recipientValidation.ok) {
+            toast.error('Invalid recipient', {
+                description: recipientValidation.message,
+            });
+            return;
+        }
+        if (!amountValidation.ok) {
+            toast.error('Invalid amount', {
+                description: amountValidation.message,
+            });
+            return;
+        }
         setIsUpdating(true);
 
         try {
-            console.log(`Sending ${amount} mUSDC to ${recipient}...`);
+            console.log(`Sending ${amountValidation.normalized} mUSDC to ${recipientValidation.normalized}...`);
             const transferHash = await writeContractAsync({
                 address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
                 abi: MockUSDCABI,
                 functionName: 'transfer',
-                args: [recipient as `0x${string}`, parseUnits(amount, 18)],
+                args: [recipientValidation.normalized, amountValidation.amountWei],
                 account: address as `0x${string}`,
                 chain: flowEVMTestnet,
             });
             await waitForTransactionReceipt(wagmiConfig, { hash: transferHash });
             await refetchUSDC();
             toast.success('Funds sent!', {
-                description: `Successfully sent ${amount} mUSDC to ${recipient.slice(0, 6)}...${recipient.slice(-4)}`,
+                description: `Successfully sent ${amountValidation.normalized} mUSDC to ${recipientValidation.normalized.slice(0, 6)}...${recipientValidation.normalized.slice(-4)}`,
             });
             setAmount('');
             setRecipient('');
         } catch (error) {
             console.error('Transfer failed:', error);
             toast.error('Transfer failed', {
-                description: 'Check the recipient address and your balance.',
+                description: getErrorMessage(
+                    error,
+                    'Check the recipient address and your balance.'
+                ),
             });
         } finally {
             setIsUpdating(false);
@@ -95,6 +112,11 @@ export default function SendScreen() {
                             USDC
                         </div>
                     </div>
+                    {amount && !amountValidation.ok && (
+                        <p className="text-[10px] text-red-500 font-bold px-1">
+                            {amountValidation.message}
+                        </p>
+                    )}
                 </div>
 
                 {/* Recipient Input */}
@@ -110,6 +132,11 @@ export default function SendScreen() {
                             className="bg-transparent flex-1 outline-none font-bold text-slate-900 placeholder:text-slate-300"
                         />
                     </div>
+                    {recipient && !recipientValidation.ok && (
+                        <p className="text-[10px] text-red-500 font-bold px-1">
+                            {recipientValidation.message}
+                        </p>
+                    )}
                 </div>
 
                 {/* Recent Items Placeholder */}
@@ -127,7 +154,7 @@ export default function SendScreen() {
             <div className="p-6 bg-white border-t border-slate-100 sticky bottom-0">
                 <button
                     onClick={handleTransfer}
-                    disabled={isUpdating || !recipient || !amount || parseFloat(amount) <= 0}
+                    disabled={isUpdating || !address || !recipientValidation.ok || !amountValidation.ok}
                     className="w-full bg-primary text-white py-5 rounded-[24px] font-black text-lg shadow-2xl shadow-primary/20 hover:bg-primary/90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
                 >
                     {isUpdating ? (

@@ -1,10 +1,12 @@
 'use client';
 
+import Image from 'next/image';
 import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Moon, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/lib/theme-context';
+import { getPrivyWalletAddress } from '@/lib/active-wallet';
 
 export default function SettingsScreen() {
     const { user, logout } = usePrivy();
@@ -12,7 +14,7 @@ export default function SettingsScreen() {
     const { theme, toggleTheme } = useTheme();
     const userEmail = user?.email?.address || 'No email linked';
     const userName = userEmail.split('@')[0] || 'User';
-    const userWallet = user?.smartWallet?.address || user?.wallet?.address || 'No wallet connected';
+    const userWallet = getPrivyWalletAddress(user) || 'No wallet connected';
 
     const handleLogout = async () => {
         await logout();
@@ -55,7 +57,14 @@ export default function SettingsScreen() {
                 {/* Profile Snapshot */}
                 <div className="bg-white dark:bg-[#1E2235] rounded-3xl p-6 border border-slate-100 dark:border-[#2D3348] flex items-center gap-4 shadow-sm">
                     <div className="size-16 rounded-full bg-slate-200 overflow-hidden">
-                        <img src={`https://ui-avatars.com/api/?name=${userName}&background=4A90E2&color=fff`} alt="Profile" />
+                        <Image
+                            src={`https://ui-avatars.com/api/?name=${userName}&background=4A90E2&color=fff`}
+                            alt="Profile"
+                            width={64}
+                            height={64}
+                            className="size-16"
+                            unoptimized
+                        />
                     </div>
                     <div className="min-w-0 flex-1">
                         <h2 className="text-lg font-bold text-slate-900 dark:text-white capitalize">{userName}</h2>

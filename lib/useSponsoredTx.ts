@@ -1,5 +1,5 @@
-import { useWriteContract, useAccount } from 'wagmi';
-import { ZERODEV_PROJECT_ID } from './aa-config';
+import { useWriteContract } from 'wagmi';
+import { getSponsorshipState } from './aa-config';
 import { toast } from 'sonner';
 
 /**
@@ -14,39 +14,24 @@ import { toast } from 'sonner';
  */
 export function useSponsoredWriteContract() {
     const { writeContractAsync, ...rest } = useWriteContract();
-    const { address } = useAccount();
+    const sponsorship = getSponsorshipState();
 
     const writeSponsoredAsync = async (args: Parameters<typeof writeContractAsync>[0]) => {
-        // 1. Check if ZeroDev Paymaster is cleanly configured
-        const isSponsorshipConfigured = ZERODEV_PROJECT_ID && 
-                                        ZERODEV_PROJECT_ID !== 'your_zerodev_project_id' && 
-                                        !ZERODEV_PROJECT_ID.includes('...');
-
-        if (!isSponsorshipConfigured) {
-            console.log('⛽ ZeroDev Paymaster not configured. Falling back to native FLOW gas.');
-            // Proceed with normal transaction
+        if (!sponsorship.isConfigured) {
             return await writeContractAsync(args);
         }
 
-        // 2. Real Sponsorship Path
-        console.log('✨ Sending Gasless Sponsored Transaction via ZeroDev!');
         try {
-            // In a fully configured Wagmi v2 + ZeroDev v5 setup,
-            // passing the smart account or intercepting at the connector level
-            // handles this transparently. We enforce the wrapper here for explicit UX.
-            
-            toast('Requesting Gas Sponsorship...', {
-                description: 'ZeroDev is paying your FLOW network fees.',
-                icon: '⚡',
+            toast('Using configured transaction mode...', {
+                description:
+                    'This write uses the current smart-account sponsorship setup when available.',
+                icon: '⚙️',
             });
 
-            // Modern Wagmi / Viem inherently supports EIP-5792 and paymaster URLs 
-            // injected via the connector context. 
             const hash = await writeContractAsync(args);
             return hash;
-            
-        } catch (error: any) {
-            console.error('Sponsored transaction failed:', error);
+        } catch (error: unknown) {
+            console.error('Configured transaction mode failed:', error);
             throw error;
         }
     };
@@ -54,6 +39,9 @@ export function useSponsoredWriteContract() {
     return {
         writeContractAsync: writeSponsoredAsync,
         writeSponsoredAsync,
+        feeMode: sponsorship.feeMode,
+        feeLabel: sponsorship.feeLabel,
+        isSponsorshipConfigured: sponsorship.isConfigured,
         ...rest
     };
 }
