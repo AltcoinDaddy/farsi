@@ -4,6 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useActiveWalletAddress } from '@/lib/active-wallet';
+import { openMiniPayAddCash } from '@/lib/minipay';
 
 export default function BuyScreen() {
     const router = useRouter();
@@ -19,7 +20,7 @@ export default function BuyScreen() {
             return;
         }
 
-        window.open('https://link.minipay.xyz/add_cash?tokens=CUSD', '_blank');
+        openMiniPayAddCash();
 
         toast.info('Opening MiniPay Add Cash', {
             description: 'This opens MiniPay so you can fund your wallet with cUSD.',

@@ -6,6 +6,8 @@ type EthereumProvider = {
     isMiniPay?: boolean;
 };
 
+export const MINIPAY_ADD_CASH_URL = 'https://link.minipay.xyz/add_cash?tokens=CUSD';
+
 function getEthereumProvider(): EthereumProvider | undefined {
     if (typeof window === 'undefined') {
         return undefined;
@@ -16,6 +18,14 @@ function getEthereumProvider(): EthereumProvider | undefined {
 
 export function isMiniPayEnvironment() {
     return getEthereumProvider()?.isMiniPay === true;
+}
+
+export function openMiniPayAddCash() {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    window.open(MINIPAY_ADD_CASH_URL, '_blank');
 }
 
 export function useMiniPay() {

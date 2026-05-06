@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { ChevronRight, ShieldCheck, User, Wallet } from 'lucide-react';
 import { useAccount, useConnect } from 'wagmi';
 import { getPrivyWalletAddress } from '@/lib/active-wallet';
-import { useMiniPay } from '@/lib/minipay';
+import { openMiniPayAddCash, useMiniPay } from '@/lib/minipay';
 
 const PREVIEW_SESSION_KEY = 'farsi_preview_session';
 
@@ -171,12 +171,21 @@ export default function Onboarding() {
                         <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">You&apos;re all set!</h1>
                         <p className="text-neutral-muted font-medium leading-relaxed">Your smart account is secure and ready for your first deposit.</p>
                         <div className="pt-8 space-y-4">
+                            <button
+                                onClick={() => {
+                                    completeOnboarding();
+                                    openMiniPayAddCash();
+                                }}
+                                className="w-full bg-primary text-white font-bold py-4 rounded-xl block text-center shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all"
+                            >
+                                Add Cash with MiniPay
+                            </button>
                             <Link
                                 href="/buy"
                                 onClick={completeOnboarding}
-                                className="w-full bg-primary text-white font-bold py-4 rounded-xl block text-center shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all"
+                                className="w-full border border-primary/20 text-primary font-bold py-4 rounded-xl block text-center hover:bg-primary/5 transition-all"
                             >
-                                Buy First Crypto
+                                Funding Walkthrough
                             </Link>
                             <button
                                 onClick={() => { completeOnboarding(); router.push('/'); }}
