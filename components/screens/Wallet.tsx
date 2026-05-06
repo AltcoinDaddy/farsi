@@ -8,7 +8,7 @@ import { formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { useActiveWalletAddress } from '@/lib/active-wallet';
 import { useCeloUsdPrice } from '@/lib/use-celo-price';
-import { useUsdcTransferHistory } from '@/lib/use-usdc-transfer-history';
+import { useCusdTransferHistory } from '@/lib/use-usdc-transfer-history';
 
 function timeAgo(date: number | Date) {
     const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
@@ -29,41 +29,41 @@ function timeAgo(date: number | Date) {
 export default function WalletScreen() {
     const { address } = useActiveWalletAddress();
     const { celoUsdPrice } = useCeloUsdPrice();
-    const { transactions, isLoadingHistory } = useUsdcTransferHistory(address, 10);
+    const { transactions, isLoadingHistory } = useCusdTransferHistory(address, 10);
 
     // Fetch CELO balance
-    const { data: flowBalance } = useBalance({
+    const { data: celoBalance } = useBalance({
         address,
     });
 
-    // Fetch mUSDC balance
-    const { data: usdcBalance } = useBalance({
+    // Fetch cUSD balance
+    const { data: cUsdBalance } = useBalance({
         address,
-        token: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
+        token: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
     });
 
     const assets = [
         {
             name: 'cUSD',
             symbol: 'cUSD',
-            balance: usdcBalance ? parseFloat(formatUnits(usdcBalance.value, usdcBalance.decimals)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00',
-            value: usdcBalance ? `$${parseFloat(formatUnits(usdcBalance.value, usdcBalance.decimals)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00',
+            balance: cUsdBalance ? parseFloat(formatUnits(cUsdBalance.value, cUsdBalance.decimals)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00',
+            value: cUsdBalance ? `$${parseFloat(formatUnits(cUsdBalance.value, cUsdBalance.decimals)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00',
             icon: '$',
             color: 'bg-[#4A90E2]'
         },
         {
             name: 'Celo',
             symbol: 'CELO',
-            balance: flowBalance ? parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : '0.00',
-            value: flowBalance ? `$${(parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)) * celoUsdPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00',
+            balance: celoBalance ? parseFloat(formatUnits(celoBalance.value, celoBalance.decimals)).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : '0.00',
+            value: celoBalance ? `$${(parseFloat(formatUnits(celoBalance.value, celoBalance.decimals)) * celoUsdPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00',
             icon: 'F',
             color: 'bg-[#27AE60]'
         },
     ];
 
     const totalValue = (
-        (usdcBalance ? parseFloat(formatUnits(usdcBalance.value, usdcBalance.decimals)) : 0) +
-        (flowBalance ? parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)) * celoUsdPrice : 0)
+        (cUsdBalance ? parseFloat(formatUnits(cUsdBalance.value, cUsdBalance.decimals)) : 0) +
+        (celoBalance ? parseFloat(formatUnits(celoBalance.value, celoBalance.decimals)) * celoUsdPrice : 0)
     ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     return (

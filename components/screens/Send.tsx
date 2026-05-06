@@ -7,7 +7,7 @@ import { useReadContract } from 'wagmi';
 import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
-import MockUSDCABI from '@/lib/abi/MockUSDC.json';
+import CUSDTokenABI from '@/lib/abi/MockUSDC.json';
 import { celoSepoliaChain } from '@/lib/web3-config';
 import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
@@ -24,10 +24,10 @@ export default function SendScreen() {
     const amountValidation = validateTokenAmount(amount);
     const recipientValidation = validateRecipientAddress(recipient, address);
 
-    // Fetch mUSDC balance for display
-    const { data: usdcBalance, refetch: refetchUSDC } = useReadContract({
-        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-        abi: MockUSDCABI,
+    // Fetch cUSD balance for display
+    const { data: cUsdBalance, refetch: refetchCUSD } = useReadContract({
+        address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+        abi: CUSDTokenABI,
         functionName: 'balanceOf',
         args: address ? [address] : undefined,
         query: { enabled: !!address },
@@ -52,15 +52,15 @@ export default function SendScreen() {
         try {
             console.log(`Sending ${amountValidation.normalized} cUSD to ${recipientValidation.normalized}...`);
             const transferHash = await writeContractAsync({
-                address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-                abi: MockUSDCABI,
+                address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+                abi: CUSDTokenABI,
                 functionName: 'transfer',
                 args: [recipientValidation.normalized, amountValidation.amountWei],
                 account: address as `0x${string}`,
                 chain: celoSepoliaChain,
             });
             await waitForTransactionReceipt(wagmiConfig, { hash: transferHash });
-            await refetchUSDC();
+            await refetchCUSD();
             toast.success('Funds sent!', {
                 description: `Successfully sent ${amountValidation.normalized} cUSD to ${recipientValidation.normalized.slice(0, 6)}...${recipientValidation.normalized.slice(-4)}`,
             });
@@ -79,7 +79,7 @@ export default function SendScreen() {
         }
     };
 
-    const formattedUSDC = usdcBalance ? parseFloat(formatUnits(usdcBalance as bigint, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
+    const formattedCUSD = cUsdBalance ? parseFloat(formatUnits(cUsdBalance as bigint, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
 
     return (
         <div className="flex flex-col min-h-screen bg-white text-slate-900">
@@ -97,7 +97,7 @@ export default function SendScreen() {
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Amount to Send</label>
                         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
                             <Wallet size={12} />
-                            {formattedUSDC} cUSD
+                            {formattedCUSD} cUSD
                         </div>
                     </div>
                     <div className="relative">

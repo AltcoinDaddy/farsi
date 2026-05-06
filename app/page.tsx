@@ -6,14 +6,14 @@ import { formatUnits } from 'viem';
 import { useReadContract } from 'wagmi';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import YieldVaultABI from '@/lib/abi/YieldVault.json';
-import MockUSDCABI from '@/lib/abi/MockUSDC.json';
+import CUSDTokenABI from '@/lib/abi/MockUSDC.json';
 import { ArrowUpRight, ArrowDownLeft, History, Wallet, Sparkles, TrendingUp } from 'lucide-react';
 import React from 'react';
 import { toast } from 'sonner';
 import { useNotifications } from '@/lib/notification-context';
 import { useActiveWalletAddress } from '@/lib/active-wallet';
 import { useCeloUsdPrice } from '@/lib/use-celo-price';
-import { useUsdcTransferHistory } from '@/lib/use-usdc-transfer-history';
+import { useCusdTransferHistory } from '@/lib/use-usdc-transfer-history';
 
 function timeAgo(date: Date): string {
     const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -31,7 +31,7 @@ export default function DashboardPage() {
     const [showNotifications, setShowNotifications] = React.useState(false);
     const { notifications, unreadCount, markAllRead } = useNotifications();
     const { celoUsdPrice } = useCeloUsdPrice();
-    const { transactions, isLoadingHistory } = useUsdcTransferHistory(address, 3);
+    const { transactions, isLoadingHistory } = useCusdTransferHistory(address, 3);
 
     const { data: balance, isLoading: isBalanceLoading } = useBalance({
         address: address,
@@ -39,10 +39,10 @@ export default function DashboardPage() {
 
     const displayName = user?.email?.address?.split('@')[0] || 'User';
 
-    // Fetch mUSDC balance
-    const { data: usdcBalance, isLoading: isUsdcLoading } = useReadContract({
-        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-        abi: MockUSDCABI,
+    // Fetch cUSD balance
+    const { data: cUsdBalance } = useReadContract({
+        address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+        abi: CUSDTokenABI,
         functionName: 'balanceOf',
         args: address ? [address] : undefined,
         query: { enabled: !!address },
@@ -56,17 +56,17 @@ export default function DashboardPage() {
         args: address ? [address] : undefined,
         query: { enabled: !!address },
     });
-    const usdcBalanceValue = typeof usdcBalance === 'bigint' ? usdcBalance : 0n;
+    const cUsdBalanceValue = typeof cUsdBalance === 'bigint' ? cUsdBalance : 0n;
     const vaultBalanceValue = typeof vaultBalance === 'bigint' ? vaultBalance : 0n;
 
-    const flowVal = balance ? parseFloat(formatUnits(balance.value, balance.decimals)) : 0;
-    const usdcVal = parseFloat(formatUnits(usdcBalanceValue, 18));
+    const celoValue = balance ? parseFloat(formatUnits(balance.value, balance.decimals)) : 0;
+    const cUsdValue = parseFloat(formatUnits(cUsdBalanceValue, 18));
     
     // Calculate Portfolio Value in USD
-    const totalFiatValue = (flowVal * celoUsdPrice) + usdcVal;
+    const totalFiatValue = (celoValue * celoUsdPrice) + cUsdValue;
 
-    const formattedBalance = flowVal.toFixed(2);
-    const formattedUsdc = usdcVal.toFixed(2);
+    const formattedBalance = celoValue.toFixed(2);
+    const formattedCusd = cUsdValue.toFixed(2);
     const hasYield = vaultBalanceValue > 0n;
 
     const handleCopyAddress = () => {
@@ -179,13 +179,13 @@ export default function DashboardPage() {
                                 <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl self-start">
                                     <div className="size-4 rounded-full bg-primary border-2 border-white flex items-center justify-center text-[8px] font-bold text-white italic">F</div>
                                     <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                                        {formattedBalance} CELO <span className="text-slate-300 mx-1">/</span> <span className="text-primary">${(flowVal * celoUsdPrice).toFixed(2)}</span>
+                                        {formattedBalance} CELO <span className="text-slate-300 mx-1">/</span> <span className="text-primary">${(celoValue * celoUsdPrice).toFixed(2)}</span>
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl self-start">
                                     <div className="size-4 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-[8px] font-bold text-white">U</div>
                                     <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                                        {formattedUsdc} cUSD <span className="text-slate-300 mx-1">/</span> <span className="text-blue-500">${usdcVal.toFixed(2)}</span>
+                                        {formattedCusd} cUSD <span className="text-slate-300 mx-1">/</span> <span className="text-blue-500">${cUsdValue.toFixed(2)}</span>
                                     </span>
                                 </div>
                             </div>

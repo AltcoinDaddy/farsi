@@ -6,7 +6,7 @@ import { useReadContract } from 'wagmi';
 import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import YieldVaultABI from '@/lib/abi/YieldVault.json';
-import MockUSDCABI from '@/lib/abi/MockUSDC.json';
+import CUSDTokenABI from '@/lib/abi/MockUSDC.json';
 import { formatUnits, parseUnits } from 'viem';
 import { useRouter } from 'next/navigation';
 import { celoSepoliaChain } from '@/lib/web3-config';
@@ -27,10 +27,10 @@ export default function EarnScreen() {
     const { addNotification } = useNotifications();
     const amountValidation = validateTokenAmount(amount);
 
-    // Fetch mUSDC balance
-    const { data: usdcBalance, refetch: refetchUSDC } = useReadContract({
-        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-        abi: MockUSDCABI,
+    // Fetch cUSD balance
+    const { data: cUsdBalance, refetch: refetchCUSD } = useReadContract({
+        address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+        abi: CUSDTokenABI,
         functionName: 'balanceOf',
         args: address ? [address] : undefined,
         query: { enabled: !!address },
@@ -62,13 +62,13 @@ export default function EarnScreen() {
 
     // Fetch allowance
     const { data: allowance, refetch: refetchAllowance } = useReadContract({
-        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-        abi: MockUSDCABI,
+        address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+        abi: CUSDTokenABI,
         functionName: 'allowance',
         args: address ? [address, CONTRACT_ADDRESSES.YieldVault] : undefined,
         query: { enabled: !!address },
     });
-    const usdcBalanceValue = typeof usdcBalance === 'bigint' ? usdcBalance : 0n;
+    const cUsdBalanceValue = typeof cUsdBalance === 'bigint' ? cUsdBalance : 0n;
     const vaultBalanceValue = typeof vaultBalance === 'bigint' ? vaultBalance : 0n;
     const assetsValueAmount = typeof assetsValue === 'bigint' ? assetsValue : 0n;
     const currentApy = typeof currentApyBps === 'bigint' ? currentApyBps : 450n;
@@ -101,7 +101,7 @@ export default function EarnScreen() {
                 );
             }
 
-            await refetchUSDC();
+            await refetchCUSD();
             toast.success('Funding info ready', {
                 description: data?.message || 'Use MiniPay or a Celo wallet to fund your cUSD balance.',
             });
@@ -146,7 +146,7 @@ export default function EarnScreen() {
                 chain: celoSepoliaChain,
             });
             await waitForTransactionReceipt(wagmiConfig, { hash: withdrawHash });
-            await Promise.all([refetchVault(), refetchUSDC(), refetchAllowance()]);
+            await Promise.all([refetchVault(), refetchCUSD(), refetchAllowance()]);
             toast.success('Withdrawal complete', {
                 description: `${amount} cUSD has been returned to your wallet.`,
             });
@@ -170,7 +170,7 @@ export default function EarnScreen() {
         }
     };
 
-    const formattedUSDC = parseFloat(formatUnits(usdcBalanceValue, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formattedCUSD = parseFloat(formatUnits(cUsdBalanceValue, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const formattedVault = parseFloat(formatUnits(assetsValueAmount, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const vaultShares = parseFloat(formatUnits(vaultBalanceValue, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const displayApy = (Number(currentApy) / 100).toFixed(1);
@@ -190,8 +190,8 @@ export default function EarnScreen() {
             if (allowanceValue < amountValidation.amountWei) {
                 console.log('Insufficient allowance, approving...');
                 const approveHash = await writeContractAsync({
-                    address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
-                    abi: MockUSDCABI,
+                    address: CONTRACT_ADDRESSES.cUSD as `0x${string}`,
+                    abi: CUSDTokenABI,
                     functionName: 'approve',
                     args: [CONTRACT_ADDRESSES.YieldVault, parseUnits('10000', 18)], // Approve a larger amount for better UX
                     account: address,
@@ -214,7 +214,7 @@ export default function EarnScreen() {
             await waitForTransactionReceipt(wagmiConfig, { hash: depositHash });
 
             // Final refresh
-            await Promise.all([refetchUSDC(), refetchVault()]);
+            await Promise.all([refetchCUSD(), refetchVault()]);
             toast.success('Deposit successful!', {
                 description: `Successfully saved ${amount} cUSD in the vault.`,
             });
@@ -280,7 +280,7 @@ export default function EarnScreen() {
             <div className="space-y-3">
                 <div className="flex justify-between items-center px-1">
                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Amount to Save</label>
-                    <span className="text-[10px] text-slate-400 font-bold">Wallet: {formattedUSDC} cUSD</span>
+                    <span className="text-[10px] text-slate-400 font-bold">Wallet: {formattedCUSD} cUSD</span>
                 </div>
                 <div className="relative group">
                     <input
