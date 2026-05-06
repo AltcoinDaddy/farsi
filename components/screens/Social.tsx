@@ -11,7 +11,7 @@ import { formatUnits, parseUnits } from 'viem';
 import { celoSepoliaChain } from '@/lib/web3-config';
 import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { createReceiptUrl } from '@/lib/receipts';
 import { useActiveWalletAddress } from '@/lib/active-wallet';
@@ -21,8 +21,17 @@ import { QRCodeSVG } from 'qrcode.react';
 
 type PotAddress = `0x${string}`;
 
+const POT_TEMPLATES = [
+    { name: 'Emergency Fund', target: '250' },
+    { name: 'School Fees', target: '500' },
+    { name: 'Rent Support', target: '800' },
+];
+
+const QUICK_CONTRIBUTIONS = ['10', '25', '50', '100'];
+
 export default function SocialScreen() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { address } = useActiveWalletAddress();
     const { writeContractAsync, feeMode } = useSponsoredWriteContract();
     const [isUpdating, setIsUpdating] = React.useState(false);
@@ -30,6 +39,12 @@ export default function SocialScreen() {
     const [potName, setPotName] = React.useState('');
     const [potTarget, setPotTarget] = React.useState('500');
     const potTargetValidation = validateTokenAmount(potTarget);
+
+    React.useEffect(() => {
+        if (searchParams.get('action') === 'create') {
+            setShowModal(true);
+        }
+    }, [searchParams]);
 
     // Fetch all pots from the factory
     const { data: pots, isLoading, refetch: refetchPots } = useReadContract({
@@ -111,6 +126,51 @@ export default function SocialScreen() {
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto p-6 space-y-6">
+                <section className="rounded-[32px] border border-slate-100 bg-white p-6 shadow-sm">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-2">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Save Together</p>
+                            <h2 className="text-2xl font-black italic tracking-tight text-slate-900">Turn cUSD goals into group momentum.</h2>
+                            <p className="text-sm font-bold leading-relaxed text-slate-500">
+                                Create a pot, share it with your people, and watch contributions stack up together.
+                            </p>
+                        </div>
+                        <div className="hidden size-14 shrink-0 rounded-2xl bg-primary/10 text-primary sm:flex items-center justify-center">
+                            <span className="material-symbols-outlined text-3xl">groups</span>
+                        </div>
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-3 gap-3 text-center">
+                        <div className="rounded-2xl bg-slate-50 px-3 py-4">
+                            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">1</p>
+                            <p className="mt-2 text-xs font-black text-slate-900">Create</p>
+                        </div>
+                        <div className="rounded-2xl bg-slate-50 px-3 py-4">
+                            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">2</p>
+                            <p className="mt-2 text-xs font-black text-slate-900">Share</p>
+                        </div>
+                        <div className="rounded-2xl bg-slate-50 px-3 py-4">
+                            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">3</p>
+                            <p className="mt-2 text-xs font-black text-slate-900">Contribute</p>
+                        </div>
+                    </div>
+
+                    <div className="mt-5 flex gap-3">
+                        <button
+                            onClick={() => setShowModal(true)}
+                            className="flex-1 rounded-2xl bg-primary px-4 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-xl shadow-primary/20 transition-all active:scale-95"
+                        >
+                            Start a Pot
+                        </button>
+                        <button
+                            onClick={() => window.scrollTo({ top: 520, behavior: 'smooth' })}
+                            className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-4 text-[10px] font-black uppercase tracking-[0.18em] text-slate-900 transition-all active:scale-95"
+                        >
+                            View Active Pots
+                        </button>
+                    </div>
+                </section>
+
                 <div className="space-y-4 pb-24">
                     {isLoading && (
                         <div className="flex flex-col items-center justify-center py-20 animate-pulse space-y-4">
@@ -160,6 +220,26 @@ export default function SocialScreen() {
                             </div>
 
                             <div className="space-y-6">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Fast Templates</label>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {POT_TEMPLATES.map((template) => (
+                                            <button
+                                                key={template.name}
+                                                type="button"
+                                                onClick={() => {
+                                                    setPotName(template.name);
+                                                    setPotTarget(template.target);
+                                                }}
+                                                className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-left transition-colors hover:border-primary hover:bg-primary/5"
+                                            >
+                                                <span className="text-xs font-black text-slate-900">{template.name}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{template.target} cUSD</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 <div className="space-y-3">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Goal Name</label>
                                     <input
@@ -418,7 +498,24 @@ function PotCard({ address }: { address: PotAddress }) {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-4 pt-4 border-t border-slate-50">
+                            <div className="flex flex-col gap-4 pt-4 border-t border-slate-50">
+                        <div className="flex flex-wrap gap-2">
+                            {QUICK_CONTRIBUTIONS.map((quickAmount) => (
+                                <button
+                                    key={quickAmount}
+                                    type="button"
+                                    onClick={() => setAmount(quickAmount)}
+                                    className={`rounded-full border px-3 py-2 text-[10px] font-black uppercase tracking-widest transition-colors ${
+                                        amount === quickAmount
+                                            ? 'border-primary bg-primary text-white'
+                                            : 'border-slate-200 bg-white text-slate-500 hover:border-primary/40 hover:text-primary'
+                                    }`}
+                                >
+                                    {quickAmount} cUSD
+                                </button>
+                            ))}
+                        </div>
+
                         <div className="flex gap-3">
                             <div className="flex-1 relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs italic">$</span>

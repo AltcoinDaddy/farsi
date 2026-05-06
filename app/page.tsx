@@ -254,15 +254,68 @@ export default function DashboardPage() {
                     </div>
                 )}
                 
-                {/* Rest of the original Dashboard content... */}
                 <div className="space-y-4">
                     <div className="flex justify-between items-center px-1">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Live Status</h3>
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Flagship Flow</h3>
+                        <span className="flex items-center gap-1.5 text-[9px] font-black text-amber-700 uppercase tracking-widest">
+                            <span className="size-1.5 rounded-full bg-amber-500" /> Group Savings
+                        </span>
+                    </div>
+
+                    <Link href="/social" className="relative overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-6 transition-all active:scale-[0.98]">
+                        <div className="absolute right-0 top-0 h-28 w-28 translate-x-6 -translate-y-6 rounded-full bg-amber-200/30 blur-2xl" />
+                        <div className="relative z-10 space-y-5">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-center gap-5">
+                                    <div className="size-14 rounded-2xl border border-amber-200 bg-white text-amber-700 shadow-sm flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-3xl material-symbols-filled">groups</span>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-base font-black italic tracking-tight text-slate-900">Save together with Pots</h4>
+                                        <p className="text-xs font-bold text-slate-500">
+                                            Start a shared cUSD goal, invite contributors, and track progress together.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-1 text-amber-700">
+                                    <span className="text-xs font-black italic tracking-tighter">Open</span>
+                                    <span className="material-symbols-outlined">chevron_right</span>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                                <div className="rounded-2xl border border-white bg-white/80 px-4 py-3">Create shared goals</div>
+                                <div className="rounded-2xl border border-white bg-white/80 px-4 py-3">Contribute in seconds</div>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <Link
+                                    href="/social?action=create"
+                                    onClick={(event) => event.stopPropagation()}
+                                    className="flex-1 rounded-2xl bg-slate-900 px-4 py-4 text-center text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-slate-900/10"
+                                >
+                                    Start a Pot
+                                </Link>
+                                <Link
+                                    href="/social"
+                                    onClick={(event) => event.stopPropagation()}
+                                    className="flex-1 rounded-2xl border border-amber-200 bg-white px-4 py-4 text-center text-[10px] font-black uppercase tracking-[0.18em] text-amber-700"
+                                >
+                                    See Active Pots
+                                </Link>
+                            </div>
+                        </div>
+                    </Link>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center px-1">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Personal Save</h3>
                         {hasYield && <span className="flex items-center gap-1.5 text-[9px] font-black text-success uppercase tracking-widest animate-pulse">
-                            <span className="size-1.5 rounded-full bg-success" /> Multiplier Active
+                            <span className="size-1.5 rounded-full bg-success" /> Balance Active
                         </span>}
                     </div>
-                    
+
                     <Link href="/save" className={`relative rounded-3xl p-6 flex items-center justify-between border transition-all active:scale-[0.98] group overflow-hidden ${hasYield ? 'bg-success/5 border-success/10' : 'bg-primary/5 border-primary/10'}`}>
                         <div className="flex items-center gap-5 relative z-10">
                             <div className={`size-14 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform ${hasYield ? 'bg-white text-success' : 'bg-white text-primary'}`}>
@@ -280,8 +333,8 @@ export default function DashboardPage() {
                             </div>
                         </div>
                         <div className={`flex items-center gap-1 ${hasYield ? 'text-success' : 'text-primary'}`}>
-                             <span className="text-xs font-black italic tracking-tighter">View</span>
-                             <span className="material-symbols-outlined">chevron_right</span>
+                            <span className="text-xs font-black italic tracking-tighter">View</span>
+                            <span className="material-symbols-outlined">chevron_right</span>
                         </div>
                     </Link>
                 </div>
@@ -289,8 +342,8 @@ export default function DashboardPage() {
                 {/* Quick Shortcuts */}
                 <div className="grid grid-cols-3 gap-6">
                     {[
-                        { href: '/spend', name: 'Spend', icon: 'shopping_cart_checkout', color: '#4A90E2' },
                         { href: '/social', name: 'Pots', icon: 'groups', color: '#B45309' },
+                        { href: '/save', name: 'Save', icon: 'savings', color: '#0F766E' },
                         { href: '/wallet', name: 'History', icon: 'history', color: '#64748b' },
                     ].map((btn) => (
                         <Link key={btn.name} href={btn.href} className="flex flex-col items-center gap-3 group">

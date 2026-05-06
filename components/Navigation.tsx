@@ -8,9 +8,9 @@ export default function Navigation() {
 
     const navItems = [
         { label: 'Home', icon: 'home', href: '/' },
+        { label: 'Pots', icon: 'group', href: '/social' },
+        { label: 'Save', icon: 'savings', href: '/save' },
         { label: 'Wallet', icon: 'account_balance_wallet', href: '/wallet' },
-        { label: 'Spend', icon: 'shopping_bag', href: '/spend' },
-        { label: 'Social', icon: 'group', href: '/social' },
         { label: 'Settings', icon: 'settings', href: '/settings' },
     ];
 
