@@ -4,7 +4,7 @@ import React from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { ChevronLeft, ShoppingBag, Wifi, Car, Coffee, MoreHorizontal, Wallet } from 'lucide-react';
 import Link from 'next/link';
-import { useAccount, useReadContract, usePublicClient } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { parseUnits, formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
@@ -31,19 +31,35 @@ export default function SpendScreen() {
         address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
         abi: MockUSDCABI,
         functionName: 'balanceOf',
-        args: [address],
+        args: address ? [address] : undefined,
+        query: { enabled: !!address },
     });
 
     // Fetch allowance for Vault
-    const { data: vaultAllowance, refetch: refetchVaultAllowance } = useReadContract({
+    const { data: vaultAllowance } = useReadContract({
         address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
         abi: MockUSDCABI,
         functionName: 'allowance',
-        args: [address, CONTRACT_ADDRESSES.YieldVault],
+        args: address ? [address, CONTRACT_ADDRESSES.YieldVault] : undefined,
+        query: { enabled: !!address },
+    });
+
+    const { data: merchantWallet } = useReadContract({
+        address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
+        abi: MockUSDCABI,
+        functionName: 'owner',
+        query: { enabled: !!address },
     });
 
     const handleBuyGiftCard = async (category: string, amountStr: string) => {
+        const merchantAddress = merchantWallet as `0x${string}` | undefined;
         if (!address) return;
+        if (!merchantAddress) {
+            toast.error('Merchant unavailable', {
+                description: 'The demo merchant wallet is still loading. Please try again in a moment.',
+            });
+            return;
+        }
         setIsUpdating(true);
         const amount = parseFloat(amountStr.replace('$', '').replace(',', ''));
         const amountWei = parseUnits(amount.toString(), 18);
@@ -55,7 +71,7 @@ export default function SpendScreen() {
                 address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
                 abi: MockUSDCABI,
                 functionName: 'transfer',
-                args: ['0x0000000000000000000000000000000000000000', amountWei],
+                args: [merchantAddress, amountWei],
                 account: address as `0x${string}`,
                 chain: flowEVMTestnet,
             });
@@ -119,6 +135,9 @@ export default function SpendScreen() {
     };
 
     const formattedUSDC = usdcBalance ? parseFloat(formatUnits(usdcBalance as bigint, 18)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
+    const merchantSummary = merchantWallet
+        ? `${(merchantWallet as string).slice(0, 6)}...${(merchantWallet as string).slice(-4)}`
+        : 'Loading merchant wallet...';
 
     return (
         <div className="flex flex-col min-h-screen bg-[#F8F9FA] text-slate-900">
@@ -142,6 +161,12 @@ export default function SpendScreen() {
                             <p className="text-lg font-black text-slate-900 italic">{formattedUSDC} <span className="text-[10px] uppercase opacity-40 not-italic">mUSDC</span></p>
                         </div>
                     </div>
+                </div>
+
+                <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
+                    <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
+                        Demo purchases settle to the configured merchant wallet on Flow EVM: <span className="font-black text-slate-900">{merchantSummary}</span>
+                    </p>
                 </div>
 
                 {/* Premium Card Visual */}
@@ -220,7 +245,7 @@ export default function SpendScreen() {
                             <button
                                 key={cat.name}
                                 onClick={() => handleBuyGiftCard(cat.name, cat.amount)}
-                                disabled={isUpdating}
+                                disabled={isUpdating || !address || !merchantWallet}
                                 className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm flex flex-col gap-6 text-left hover:border-primary hover:shadow-xl hover:shadow-primary/5 transition-all active:scale-95 disabled:opacity-50 group relative overflow-hidden"
                             >
                                 <div className="w-14 h-14 rounded-[20px] flex items-center justify-center group-hover:scale-110 transition-transform relative z-10" style={{ backgroundColor: cat.color, color: cat.iconColor }}>
