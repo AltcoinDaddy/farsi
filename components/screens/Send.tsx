@@ -8,7 +8,7 @@ import { useSponsoredWriteContract } from '@/lib/useSponsoredTx';
 import { formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import MockUSDCABI from '@/lib/abi/MockUSDC.json';
-import { flowEVMTestnet } from '@/lib/web3-config';
+import { celoSepoliaChain } from '@/lib/web3-config';
 import { wagmiConfig } from '@/app/providers';
 import { waitForTransactionReceipt } from 'wagmi/actions';
 import { toast } from 'sonner';
@@ -50,19 +50,19 @@ export default function SendScreen() {
         setIsUpdating(true);
 
         try {
-            console.log(`Sending ${amountValidation.normalized} mUSDC to ${recipientValidation.normalized}...`);
+            console.log(`Sending ${amountValidation.normalized} cUSD to ${recipientValidation.normalized}...`);
             const transferHash = await writeContractAsync({
                 address: CONTRACT_ADDRESSES.mUSDC as `0x${string}`,
                 abi: MockUSDCABI,
                 functionName: 'transfer',
                 args: [recipientValidation.normalized, amountValidation.amountWei],
                 account: address as `0x${string}`,
-                chain: flowEVMTestnet,
+                chain: celoSepoliaChain,
             });
             await waitForTransactionReceipt(wagmiConfig, { hash: transferHash });
             await refetchUSDC();
             toast.success('Funds sent!', {
-                description: `Successfully sent ${amountValidation.normalized} mUSDC to ${recipientValidation.normalized.slice(0, 6)}...${recipientValidation.normalized.slice(-4)}`,
+                description: `Successfully sent ${amountValidation.normalized} cUSD to ${recipientValidation.normalized.slice(0, 6)}...${recipientValidation.normalized.slice(-4)}`,
             });
             setAmount('');
             setRecipient('');
@@ -97,7 +97,7 @@ export default function SendScreen() {
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Amount to Send</label>
                         <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
                             <Wallet size={12} />
-                            {formattedUSDC} mUSDC
+                            {formattedUSDC} cUSD
                         </div>
                     </div>
                     <div className="relative">
@@ -144,7 +144,7 @@ export default function SendScreen() {
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Tip</h3>
                     <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
                         <p className="text-[11px] text-slate-500 font-bold leading-relaxed">
-                            Paste a Flow EVM address above to send mUSDC instantly. Your recently used addresses will appear here in the next update.
+                            Paste a Celo address above to send cUSD instantly. Your recently used addresses will appear here in the next update.
                         </p>
                     </div>
                 </div>
@@ -165,7 +165,7 @@ export default function SendScreen() {
                     ) : (
                         <>
                             <ArrowUpRight size={20} />
-                            Send mUSDC
+                            Send cUSD
                         </>
                     )}
                 </button>

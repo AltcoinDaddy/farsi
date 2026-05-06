@@ -1,24 +1,25 @@
-import { Chain } from 'viem';
+import { type Chain } from 'viem';
 
 /**
- * Flow EVM Testnet Configuration
+ * Celo Sepolia configuration for the MiniPay-compatible Farsi build.
  */
-export const flowEVMTestnet = {
-    id: 545,
-    name: 'Flow EVM Testnet',
-    network: 'flow-evm-testnet',
+export const celoSepoliaChain: Chain = {
+    id: 11142220,
+    name: 'Celo Sepolia',
     nativeCurrency: {
         decimals: 18,
-        name: 'FLOW',
-        symbol: 'FLOW',
+        name: 'CELO',
+        symbol: 'CELO',
     },
     rpcUrls: {
-        default: { http: ['https://testnet.evm.nodes.onflow.org'] },
-        public: { http: ['https://testnet.evm.nodes.onflow.org'] },
+        default: { http: ['https://forno.celo-sepolia.celo-testnet.org'] },
+        public: { http: ['https://forno.celo-sepolia.celo-testnet.org'] },
     },
     blockExplorers: {
-        default: { name: 'Flowscan', url: 'https://evm-testnet.flowscan.io' },
+        default: {
+            name: 'Blockscout',
+            url: 'https://celo-sepolia.blockscout.com',
+        },
     },
     testnet: true,
-} as const;
-
+};

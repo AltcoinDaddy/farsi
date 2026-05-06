@@ -2,10 +2,10 @@
 
 import React from 'react';
 
-const FLOW_USD_FALLBACK = 0.65;
+const CELO_USD_FALLBACK = 0.78;
 
-export function useFlowUsdPrice() {
-    const [price, setPrice] = React.useState(FLOW_USD_FALLBACK);
+export function useCeloUsdPrice() {
+    const [price, setPrice] = React.useState(CELO_USD_FALLBACK);
     const [isLoading, setIsLoading] = React.useState(true);
 
     React.useEffect(() => {
@@ -14,21 +14,21 @@ export function useFlowUsdPrice() {
         const fetchPrice = async () => {
             try {
                 const response = await fetch(
-                    'https://api.coingecko.com/api/v3/simple/price?ids=flow&vs_currencies=usd'
+                    'https://api.coingecko.com/api/v3/simple/price?ids=celo&vs_currencies=usd'
                 );
                 const data = await response.json();
-                const nextPrice = Number(data?.flow?.usd);
+                const nextPrice = Number(data?.celo?.usd);
 
                 if (isMounted && Number.isFinite(nextPrice) && nextPrice > 0) {
                     setPrice(nextPrice);
                     return;
                 }
             } catch (error) {
-                console.error('Failed to fetch FLOW price:', error);
+                console.error('Failed to fetch CELO price:', error);
             }
 
             if (isMounted) {
-                setPrice(FLOW_USD_FALLBACK);
+                setPrice(CELO_USD_FALLBACK);
             }
         };
 
@@ -44,8 +44,8 @@ export function useFlowUsdPrice() {
     }, []);
 
     return {
-        flowUsdPrice: price,
-        isLoadingFlowPrice: isLoading,
-        isFallbackPrice: price === FLOW_USD_FALLBACK,
+        celoUsdPrice: price,
+        isLoadingCeloPrice: isLoading,
+        isFallbackPrice: price === CELO_USD_FALLBACK,
     };
 }

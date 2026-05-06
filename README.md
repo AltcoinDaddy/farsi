@@ -1,6 +1,6 @@
-# 🇮 Farsi: Financial Empowerment for New Frontiers
+# Farsi: Save Together on Celo
 
-Farsi is a premium mobile-first Decentralized Finance (DeFi) application built on **Flow EVM**. It simplifies complex blockchain interactions into a natural, high-fidelity experience, enabling users to save, earn, and spend their digital assets effortlessly.
+Farsi is a premium mobile-first savings application built on **Celo** for **MiniPay-style stablecoin users**. It simplifies blockchain interactions into a natural, high-fidelity experience, enabling users to save, contribute, and move digital dollars effortlessly.
 
 ---
 
@@ -8,32 +8,32 @@ Farsi is a premium mobile-first Decentralized Finance (DeFi) application built o
 
 In short, **Farsi is a smart money app for your phone.** 
 
-We built Farsi to bridge the gap between "hard-to-use" crypto and everyday life. Think of it like a modern banking app, but built on the next generation of tech—**Flow EVM**. It’s designed for anyone who wants to grow their digital assets without needing a degree in computer science.
+We built Farsi to bridge the gap between "hard-to-use" crypto and everyday life. Think of it like a modern banking app, but built for **Celo stablecoin flows**. It’s designed for anyone who wants to save together and move digital dollars without needing a degree in computer science.
 
 ### **The Mission**
-Our mission is simple: **Financial freedom, simplified.** No seed phrases, no complex gas management—just your money working for you on the most scalable consumer blockchain.
+Our mission is simple: **Financial freedom, simplified.** No seed phrase drama, no chain confusion, just practical saving and social finance on mobile.
 
 ---
 
 ##  Core Features
 
 ###  **On-Chain Proof (Verifiable Receipts)**
-Trust, but verify. Every action in Farsi—from saving to spending—generates a dynamic, high-fidelity receipt. These receipts are directly linked to **Flowscan**, providing users with instant, transparent proof of their transaction on the Flow EVM.
+Trust, but verify. Every action in Farsi generates a dynamic, high-fidelity receipt. These receipts are linked to **Blockscout on Celo Sepolia**, providing instant, transparent proof of each transaction.
 
 ###  **Live Wallet**
-Stay on top of your assets. Our real-time wallet pulls directly from the **Flow EVM Testnet**, showing your live **mUSDC** and **FLOW** balances. Every transaction is block-synced and authentic.
+Stay on top of your assets. Our real-time wallet pulls directly from **Celo Sepolia**, showing your live **cUSD** and **CELO** balances. Every transaction is block-synced and authentic.
 
 ###  **Smart Earn**
-Don't let your money sit idle. Farsi Earn connects you to yield-generating vaults. Deposit your mUSDC with a tap, watch it grow through the **ERC-4626 standard**, and withdraw whenever you want. No lock-ups, no hidden catches.
+Don't let your money sit idle. Farsi Save connects you to a simple savings vault. Deposit your cUSD with a tap and withdraw whenever you want while we validate the full MiniPay-native savings experience.
 
 ###  **Social Pots (Save with Friends)**
 Project savings, group gifts, or trip funds—on-chain. Create a "Social Pot," set a goal, and invite friends to contribute. It’s transparent, social, and the money is only accessible once the group hits the target.
 
 ###  **Global Send**
-Seamless P2P transfers. Send mUSDC to anyone on Flow instantly. When smart-account sponsorship is configured, the app can use that path for fees; otherwise the wallet pays standard Flow testnet gas.
+Seamless P2P transfers. Send cUSD to anyone on Celo instantly. When sponsorship is configured, the app can use that path for fees; otherwise the wallet pays standard CELO gas.
 
 ###  **Integrated Spend**
-The "closed loop" of DeFi. Use your mUSDC to purchase gift cards for **Shopping, Travel, and Lifestyle**. Get a dynamic digital receipt for every purchase and spend your digital earnings in the real world.
+The long-term goal is a full savings-and-spend loop. For now, the strongest product path is **social saving in cUSD**, backed by real contracts on Celo Sepolia.
 
 ---
 
@@ -41,7 +41,7 @@ The "closed loop" of DeFi. Use your mUSDC to purchase gift cards for **Shopping,
 
 We’ve hidden the complexity of blockchain behind a premium interface:
 
-- **Flexible Gas Handling**: The app can use a configured sponsorship path for supported setups, or fall back to standard Flow testnet gas when sponsorship is not enabled.
+- **Flexible Gas Handling**: The app can use a configured sponsorship path for supported setups, or fall back to standard CELO gas when sponsorship is not enabled.
 - **Log in your way**: Use your email or social media through **Privy**. Behind the scenes, we create a secure **Smart Account** for you instantly.
 - **Always With You**: Farsi is a Progressive Web App (PWA). Just "Add to Home Screen" and it feels just like a native app.
 - **Premium UX**: Smooth transitions, vibrant toast notifications (`sonner`), and high-fidelity receipts.
@@ -52,11 +52,11 @@ We’ve hidden the complexity of blockchain behind a premium interface:
 
 | Layer | Technology |
 | :--- | :--- |
-| **Blockchain** | Flow EVM Testnet (Chain ID: 545) |
+| **Blockchain** | Celo Sepolia (Chain ID: 11142220) |
 | **Identity** | Privy (Social/Email Login) & ZeroDev |
 | **Frontend** | Next.js 14, Tailwind CSS |
 | **Web3** | Wagmi, Viem, RainbowKit |
-| **Contracts** | Solidity (Yield Vaults, Shared Pots, mUSDC) |
+| **Contracts** | Solidity (Savings Vault, Shared Pots, cUSD-compatible flows) |
 
 ---
 
@@ -82,11 +82,11 @@ NEXT_PUBLIC_WC_PROJECT_ID=your_id
 NEXT_PUBLIC_PRIVY_APP_ID=your_id
 NEXT_PUBLIC_ZERODEV_PROJECT_ID=your_id
 NEXT_PUBLIC_ENABLE_SPONSORED_TRANSACTIONS=false
-NEXT_PUBLIC_FLOW_RPC=https://testnet.evm.nodes.onflow.org
-FAUCET_PRIVATE_KEY=your_contract_owner_private_key
+NEXT_PUBLIC_CELO_RPC=https://forno.celo-sepolia.celo-testnet.org
+PRIVATE_KEY=your_deployment_private_key
 ```
 
-`FAUCET_PRIVATE_KEY` is optional for general app usage, but it is required if you want the in-app `Get Test Funds` faucet on the Earn screen to mint test mUSDC for regular users.
+`PRIVATE_KEY` is required for contract deployment to Celo Sepolia.
 `NEXT_PUBLIC_ENABLE_SPONSORED_TRANSACTIONS` should only be turned on when the smart-account sponsorship path is fully configured for the current environment.
 
 ### 4. Run
@@ -97,10 +97,10 @@ npm run dev
 ---
 
 ## How to Demo
-1. **Get Gas**: Head to the [**Flow EVM Testnet Faucet**](https://faucet.flow.org/evm) and enter your address (found in the app's Wallet or QR code). This is necessary for gas fees!
-2. **Get Funds**: Once you have gas, go to the **Earn** screen and tap the "Get 1000" button to get your test mUSDC.
-3. **Grow**: Deposit some funds into the vault to see your yield working.
-4. **Socialize**: Create a Social Pot for a "Summer Trip" and try contributing.
-5. **Spend**: Buy a Gift Card in the Spend screen and view your dynamic receipt!🎉🏎️💨
+1. **Get Gas**: Fund your wallet with **CELO on Celo Sepolia** so you can send transactions.
+2. **Get Stablecoins**: Fund your wallet with **cUSD on Celo Sepolia** or use the MiniPay add-cash path when available.
+3. **Save**: Deposit some cUSD into the savings vault.
+4. **Socialize**: Create a Social Pot and try contributing.
+5. **Verify**: Open the receipt and confirm the transaction on Blockscout.
 
 ---

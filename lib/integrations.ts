@@ -11,7 +11,7 @@ export const Integrations = {
         new RampInstantSDK({
             hostAppName: 'Farsi DeFi',
             hostLogoUrl: 'https://farsi-app.xyz/logo.png',
-            swapAsset: 'FLOW_USDC',
+            swapAsset: 'CUSD_USDC',
             userAddress: userAddress,
             url: 'https://app.ramp.network',
         }).show();
@@ -22,11 +22,11 @@ export const Integrations = {
      * This is a placeholder until a real paymaster path is wired in.
      */
     sponsoredTx: `
-        // Flow EVM Sponsorship Implementation (Conceptual Stub)
+        // Celo sponsorship implementation (conceptual stub)
         async function sendSponsoredTransaction(request) {
             const sponsoredRequest = await paymasterClient.sponsorTransaction({
                 request,
-                paymasterAddress: '0x...FLOW_PAYMASTER'
+                paymasterAddress: '0x...CELO_PAYMASTER'
             });
             return walletClient.sendTransaction(sponsoredRequest);
         }

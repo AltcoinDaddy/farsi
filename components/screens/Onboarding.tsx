@@ -52,7 +52,7 @@ export default function Onboarding() {
                             <span className="material-symbols-outlined !text-4xl">account_balance_wallet</span>
                         </div>
                         <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">Welcome to Farsi</h1>
-                        <p className="text-neutral-muted font-medium leading-relaxed">The easiest way to save and earn on Flow. No complex seed phrases, just sign in and go.</p>
+                        <p className="text-neutral-muted font-medium leading-relaxed">The easiest way to save together on Celo. No seed phrase drama, just open your wallet and go.</p>
                         <div className="pt-8">
                             <button
                                 onClick={login}
@@ -62,7 +62,7 @@ export default function Onboarding() {
                                 <span className="material-symbols-outlined">chevron_right</span>
                             </button>
                             <p className="text-center text-[10px] text-neutral-muted mt-4">
-                                Experience the power of Account Abstraction on Flow.
+                                Built for mobile-first stablecoin saving on Celo.
                             </p>
                         </div>
                     </div>
@@ -76,7 +76,7 @@ export default function Onboarding() {
                         <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">Almost there!</h1>
                         <p className="text-neutral-muted font-medium leading-relaxed">
                             Authenticated as <span className="text-neutral-dark font-bold">{user?.email?.address}</span>.
-                            We&apos;ve created a unique smart account for you on Flow EVM.
+                            We&apos;ve prepared your wallet for Farsi on Celo.
                         </p>
                         <div className="bg-background-light p-4 rounded-xl border border-gray-100">
                             <p className="text-[10px] uppercase font-bold text-neutral-muted mb-1">Your Smart Account</p>

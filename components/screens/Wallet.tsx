@@ -7,7 +7,7 @@ import { useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { useActiveWalletAddress } from '@/lib/active-wallet';
-import { useFlowUsdPrice } from '@/lib/use-flow-price';
+import { useCeloUsdPrice } from '@/lib/use-celo-price';
 import { useUsdcTransferHistory } from '@/lib/use-usdc-transfer-history';
 
 function timeAgo(date: number | Date) {
@@ -28,10 +28,10 @@ function timeAgo(date: number | Date) {
 
 export default function WalletScreen() {
     const { address } = useActiveWalletAddress();
-    const { flowUsdPrice } = useFlowUsdPrice();
+    const { celoUsdPrice } = useCeloUsdPrice();
     const { transactions, isLoadingHistory } = useUsdcTransferHistory(address, 10);
 
-    // Fetch FLOW balance
+    // Fetch CELO balance
     const { data: flowBalance } = useBalance({
         address,
     });
@@ -52,10 +52,10 @@ export default function WalletScreen() {
             color: 'bg-[#4A90E2]'
         },
         {
-            name: 'Flow',
-            symbol: 'FLOW',
+            name: 'Celo',
+            symbol: 'CELO',
             balance: flowBalance ? parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : '0.00',
-            value: flowBalance ? `$${(parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)) * flowUsdPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00',
+            value: flowBalance ? `$${(parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)) * celoUsdPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00',
             icon: 'F',
             color: 'bg-[#27AE60]'
         },
@@ -63,7 +63,7 @@ export default function WalletScreen() {
 
     const totalValue = (
         (usdcBalance ? parseFloat(formatUnits(usdcBalance.value, usdcBalance.decimals)) : 0) +
-        (flowBalance ? parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)) * flowUsdPrice : 0)
+        (flowBalance ? parseFloat(formatUnits(flowBalance.value, flowBalance.decimals)) * celoUsdPrice : 0)
     ).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     return (
@@ -134,7 +134,7 @@ export default function WalletScreen() {
                             <History size={12} /> Recent Activity
                         </h3>
                         <a
-                            href={address ? `https://evm-testnet.flowscan.io/address/${address}` : '#'}
+                            href={address ? `https://celo-sepolia.blockscout.com/address/${address}` : '#'}
                             target="_blank"
                             className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1 hover:underline"
                         >

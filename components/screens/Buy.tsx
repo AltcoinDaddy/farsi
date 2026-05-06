@@ -20,16 +20,10 @@ export default function BuyScreen() {
             return;
         }
 
-        // Construct the Bare Metal Ramp Sandbox URL
-        const rampUrl = `https://app.demo.ramp.network/` +
-            `?userAddress=${address}` +
-            `&defaultAsset=FLOW`;
-
-        // Launch the actual Ramp window safely
-        window.open(rampUrl, '_blank');
+        window.open('https://link.minipay.xyz/add_cash?tokens=CUSD', '_blank');
         
-        toast.info('Opening Ramp sandbox', {
-            description: 'This demo opens Ramp test checkout in a new window.',
+        toast.info('Opening Add Cash', {
+            description: 'This opens the MiniPay funding flow for stablecoins.',
         });
     };
 
