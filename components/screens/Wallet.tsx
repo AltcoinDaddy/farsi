@@ -44,8 +44,8 @@ export default function WalletScreen() {
 
     const assets = [
         {
-            name: 'USDC',
-            symbol: 'USDC',
+            name: 'cUSD',
+            symbol: 'cUSD',
             balance: usdcBalance ? parseFloat(formatUnits(usdcBalance.value, usdcBalance.decimals)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00',
             value: usdcBalance ? `$${parseFloat(formatUnits(usdcBalance.value, usdcBalance.decimals)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00',
             icon: '$',
@@ -191,7 +191,7 @@ export default function WalletScreen() {
                                             <p className={`text-sm font-black ${isOutgoing ? 'text-slate-900' : 'text-success'}`}>
                                                 {isOutgoing ? '-' : '+'}{parseFloat(amount).toFixed(2)}
                                             </p>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">USDC</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">cUSD</p>
                                         </div>
                                     </div>
                                 );

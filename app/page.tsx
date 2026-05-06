@@ -185,7 +185,7 @@ export default function DashboardPage() {
                                 <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl self-start">
                                     <div className="size-4 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-[8px] font-bold text-white">U</div>
                                     <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                                        {formattedUsdc} USDC <span className="text-slate-300 mx-1">/</span> <span className="text-blue-500">${usdcVal.toFixed(2)}</span>
+                                        {formattedUsdc} cUSD <span className="text-slate-300 mx-1">/</span> <span className="text-blue-500">${usdcVal.toFixed(2)}</span>
                                     </span>
                                 </div>
                             </div>
@@ -344,7 +344,7 @@ export default function DashboardPage() {
                                             <p className={`text-lg font-black tracking-tighter ${isOutgoing ? 'text-slate-900' : 'text-success'}`}>
                                                 {isOutgoing ? '-' : '+'}{parseFloat(amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </p>
-                                            <p className="text-[8px] text-slate-300 font-black uppercase tracking-widest">USDC</p>
+                                            <p className="text-[8px] text-slate-300 font-black uppercase tracking-widest">cUSD</p>
                                         </div>
                                     </div>
                                 );

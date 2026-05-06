@@ -109,7 +109,7 @@ export default function SendScreen() {
                             className="w-full bg-slate-50 border-2 border-slate-100 rounded-[32px] p-8 text-4xl font-black text-slate-900 focus:border-primary outline-none transition-all pr-24"
                         />
                         <div className="absolute right-8 top-1/2 -translate-y-1/2 font-black text-slate-400">
-                            USDC
+                            cUSD
                         </div>
                     </div>
                     {amount && !amountValidation.ok && (
