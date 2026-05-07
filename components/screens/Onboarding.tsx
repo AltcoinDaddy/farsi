@@ -93,14 +93,21 @@ export default function Onboarding() {
                         <div className="w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center text-primary mb-8 shadow-sm">
                             <Wallet size={32} strokeWidth={2.25} />
                         </div>
-                        <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">Welcome to Farsi</h1>
+                        <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">Save together in cUSD</h1>
                         <p className="text-neutral-muted font-medium leading-relaxed">
                             {isMiniPay
-                                ? 'MiniPay detected. Connect your wallet and start saving together in cUSD.'
+                                ? 'MiniPay is ready. Connect your wallet to create a pot, join a goal, or set money aside on Celo.'
                                 : ready
-                                    ? 'The easiest way to save together on Celo. No seed phrase drama, just open your wallet and go.'
-                                    : 'Preparing secure sign-in so you can get into Farsi on Celo.'}
+                                    ? 'Farsi is designed for MiniPay-style saving on Celo. Connect here to preview the same flow in your browser.'
+                                    : 'Preparing the MiniPay-friendly sign-in flow so you can get into Farsi on Celo.'}
                         </p>
+                        <div className="grid grid-cols-3 gap-3">
+                            {['Create a pot', 'Join a goal', 'Add cash'].map((item) => (
+                                <div key={item} className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-4 text-center">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">{item}</p>
+                                </div>
+                            ))}
+                        </div>
                         <div className="pt-8">
                             {isMiniPay ? (
                                 <button
@@ -148,9 +155,9 @@ export default function Onboarding() {
                             )}
                             <p className="text-center text-[10px] text-neutral-muted mt-4">
                                 {isMiniPay
-                                    ? 'Farsi connects automatically inside MiniPay when an injected wallet is available.'
+                                    ? 'Farsi is meant to open inside MiniPay with the wallet already available.'
                                     : ready
-                                        ? 'Built for mobile-first stablecoin saving on Celo.'
+                                        ? 'This browser flow is mainly for previewing the MiniPay experience during development.'
                                         : showPreviewFallback
                                             ? 'If the local auth client is slow in this browser, you can preview the app directly.'
                                             : 'The sign-in button will unlock as soon as the secure auth client is ready.'}
@@ -164,17 +171,17 @@ export default function Onboarding() {
                         <div className="w-16 h-16 bg-success-light rounded-2xl flex items-center justify-center text-success mb-8 shadow-sm">
                             <User size={32} strokeWidth={2.25} />
                         </div>
-                        <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">Almost there!</h1>
+                        <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">Your wallet is connected</h1>
                         <p className="text-neutral-muted font-medium leading-relaxed">
                             {isMiniPay ? (
                                 <>
                                     Connected wallet <span className="text-neutral-dark font-bold">{activeAddress}</span>.
-                                    We&apos;ve prepared your wallet for Farsi on Celo.
+                                    You can now move into savings and social pot flows on Celo Sepolia.
                                 </>
                             ) : (
                                 <>
                                     Authenticated as <span className="text-neutral-dark font-bold">{user?.email?.address}</span>.
-                                    We&apos;ve prepared your wallet for Farsi on Celo.
+                                    This preview is ready to mirror the MiniPay savings flow.
                                 </>
                             )}
                         </p>
@@ -184,8 +191,12 @@ export default function Onboarding() {
                             </p>
                             <p className="text-xs font-mono text-neutral-dark truncate">{activeAddress}</p>
                         </div>
+                        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Next in Farsi</p>
+                            <p className="mt-2 text-sm font-bold text-neutral-dark">Add cUSD, then create or join a savings pot in a few taps.</p>
+                        </div>
                         <button onClick={() => setStep(3)} className="w-full bg-primary text-white font-bold py-4 rounded-xl mt-8 shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all">
-                            Finalize Profile
+                            Continue
                         </button>
                     </div>
                 )}
@@ -195,8 +206,8 @@ export default function Onboarding() {
                         <div className="mx-auto w-20 h-20 bg-success-light rounded-full flex items-center justify-center text-success mb-8 shadow-sm">
                             <ShieldCheck size={36} strokeWidth={2.25} />
                         </div>
-                        <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">You&apos;re all set!</h1>
-                        <p className="text-neutral-muted font-medium leading-relaxed">Your wallet is connected and ready for your first testnet action in Farsi.</p>
+                        <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">Start with one simple action</h1>
+                        <p className="text-neutral-muted font-medium leading-relaxed">Top up cUSD in MiniPay, then head into Pots or Save to try the core flow.</p>
                         <div className="pt-8 space-y-4">
                             <button
                                 onClick={() => {
@@ -208,11 +219,11 @@ export default function Onboarding() {
                                 Add Cash with MiniPay
                             </button>
                             <Link
-                                href="/buy"
+                                href="/social"
                                 onClick={completeOnboarding}
                                 className="w-full border border-primary/20 text-primary font-bold py-4 rounded-xl block text-center hover:bg-primary/5 transition-all"
                             >
-                                Funding Walkthrough
+                                Open Social Pots
                             </Link>
                             <button
                                 onClick={() => { completeOnboarding(); router.push('/'); }}
