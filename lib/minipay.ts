@@ -7,6 +7,7 @@ type EthereumProvider = {
 };
 
 export const MINIPAY_ADD_CASH_URL = 'https://link.minipay.xyz/add_cash?tokens=CUSD';
+export const MINIPAY_DISCOVER_URL = 'https://link.minipay.xyz/discover';
 
 function getEthereumProvider(): EthereumProvider | undefined {
     if (typeof window === 'undefined') {
@@ -26,6 +27,61 @@ export function openMiniPayAddCash() {
     }
 
     window.open(MINIPAY_ADD_CASH_URL, '_blank');
+}
+
+export function getMiniPayAppUrl() {
+    if (typeof window === 'undefined') {
+        return process.env.NEXT_PUBLIC_MINIPAY_APP_URL || null;
+    }
+
+    const configuredUrl = process.env.NEXT_PUBLIC_MINIPAY_APP_URL;
+    if (configuredUrl) {
+        return configuredUrl;
+    }
+
+    const { origin, hostname, protocol } = window.location;
+    const isLocalhost =
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '0.0.0.0';
+
+    if (protocol === 'https:' && !isLocalhost) {
+        return origin;
+    }
+
+    return null;
+}
+
+export function createMiniPayBrowseUrl() {
+    const appUrl = getMiniPayAppUrl();
+
+    if (!appUrl) {
+        return null;
+    }
+
+    return `https://link.minipay.xyz/browse?url=${encodeURIComponent(appUrl)}`;
+}
+
+export function openMiniPayBrowse() {
+    if (typeof window === 'undefined') {
+        return false;
+    }
+
+    const browseUrl = createMiniPayBrowseUrl();
+    if (!browseUrl) {
+        return false;
+    }
+
+    window.open(browseUrl, '_blank');
+    return true;
+}
+
+export function openMiniPayDiscover() {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    window.open(MINIPAY_DISCOVER_URL, '_blank');
 }
 
 export function useMiniPay() {

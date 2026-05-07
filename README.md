@@ -83,11 +83,13 @@ NEXT_PUBLIC_PRIVY_APP_ID=your_id
 NEXT_PUBLIC_ZERODEV_PROJECT_ID=your_id
 NEXT_PUBLIC_ENABLE_SPONSORED_TRANSACTIONS=false
 NEXT_PUBLIC_CELO_RPC=https://forno.celo-sepolia.celo-testnet.org
+NEXT_PUBLIC_MINIPAY_APP_URL=https://your-public-app-url.example
 PRIVATE_KEY=your_deployment_private_key
 ```
 
 `PRIVATE_KEY` is required for contract deployment to Celo Sepolia.
 `NEXT_PUBLIC_ENABLE_SPONSORED_TRANSACTIONS` should only be turned on when the smart-account sponsorship path is fully configured for the current environment.
+`NEXT_PUBLIC_MINIPAY_APP_URL` should point to the public HTTPS URL you plan to submit to MiniPay so `browse?url=...` deeplinks can open Farsi directly inside MiniPay.
 
 ### 4. Run
 ```bash

@@ -2,11 +2,12 @@
 
 import Image from 'next/image';
 import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Moon, Lock } from 'lucide-react';
-import Link from 'next/link';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/lib/theme-context';
 import { getPrivyWalletAddress } from '@/lib/active-wallet';
+import { toast } from 'sonner';
+import { openMiniPayBrowse, openMiniPayDiscover } from '@/lib/minipay';
 
 export default function SettingsScreen() {
     const { user, logout } = usePrivy();
@@ -19,6 +20,16 @@ export default function SettingsScreen() {
     const handleLogout = async () => {
         await logout();
         router.push('/onboarding');
+    };
+
+    const handleOpenInMiniPay = () => {
+        const didOpen = openMiniPayBrowse();
+
+        if (!didOpen) {
+            toast.info('MiniPay listing link not ready yet', {
+                description: 'Set NEXT_PUBLIC_MINIPAY_APP_URL once Farsi has a public HTTPS URL ready for MiniPay listing.',
+            });
+        }
     };
 
     const settingsGroups = [
@@ -40,6 +51,8 @@ export default function SettingsScreen() {
         {
             title: 'Support',
             items: [
+                { icon: Globe, label: 'Open in MiniPay', detail: 'Launch the listed Mini App', color: 'text-primary', bg: 'bg-blue-50', onClick: handleOpenInMiniPay },
+                { icon: Globe, label: 'Browse Mini Apps', detail: 'Open the MiniPay discover tab', color: 'text-emerald-500', bg: 'bg-emerald-50', onClick: openMiniPayDiscover },
                 { icon: HelpCircle, label: 'Help Center', detail: '', color: 'text-blue-500', bg: 'bg-blue-50' },
                 { icon: Lock, label: 'Privacy Policy', detail: '', color: 'text-slate-500', bg: 'bg-slate-50' },
             ]
