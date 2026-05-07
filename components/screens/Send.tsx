@@ -144,7 +144,7 @@ export default function SendScreen() {
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Tip</h3>
                     <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
                         <p className="text-[11px] text-slate-500 font-bold leading-relaxed">
-                            Paste a Celo address above to send cUSD instantly. Your recently used addresses will appear here in the next update.
+                            Paste a Celo address above to send cUSD on Celo Sepolia. Your recently used addresses will appear here in a future update.
                         </p>
                     </div>
                 </div>

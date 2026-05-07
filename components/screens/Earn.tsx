@@ -53,7 +53,7 @@ export default function EarnScreen() {
         args: [vaultBalance || 0n],
     });
 
-    // Fetch dynamic APY
+    // Fetch the contract's current demo rate
     const { data: currentApyBps } = useReadContract({
         address: CONTRACT_ADDRESSES.YieldVault as `0x${string}`,
         abi: YieldVaultABI,
@@ -222,7 +222,7 @@ export default function EarnScreen() {
                 </div>
                 <div className="flex gap-4 border-t border-white/20 pt-4">
                     <div>
-                        <p className="text-success-light/60 text-[10px] uppercase font-bold">Estimated Growth</p>
+                        <p className="text-success-light/60 text-[10px] uppercase font-bold">Demo Rate</p>
                         <p className="font-bold text-sm">{displayApy}%*</p>
                     </div>
                     <div className="flex-1">
@@ -235,7 +235,7 @@ export default function EarnScreen() {
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-800">Demo Savings Model</p>
                 <p className="mt-1 text-xs font-bold leading-relaxed text-amber-900">
-                    This savings balance uses simulated on-chain growth for testing. The displayed rate is not sourced from a live external lending protocol yet.
+                    This savings balance uses simulated on-chain growth for testing. The displayed rate comes from the demo contract and should not be treated as live market yield.
                 </p>
             </div>
 
