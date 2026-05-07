@@ -8,6 +8,7 @@ import {
     getReceiptFeeLabel,
 } from '@/lib/receipts';
 import { TransactionFeeMode } from '@/lib/aa-config';
+import { openMiniPayInviteFriends } from '@/lib/minipay';
 
 interface ReceiptProps {
     withShare?: boolean;
@@ -24,6 +25,7 @@ function ReceiptContent({ withShare }: ReceiptProps) {
     const feeLabel = getReceiptFeeLabel(feeMode);
     const explorerUrl = txHash ? createExplorerReceiptUrl(txHash) : null;
     const miniPayReceiptUrl = txHash ? createMiniPayReceiptUrl(txHash) : null;
+    const isSocialReceipt = type.toLowerCase().includes('pot');
     const date = new Date().toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -109,6 +111,15 @@ function ReceiptContent({ withShare }: ReceiptProps) {
                             <span className="material-symbols-outlined !text-xl">open_in_new</span>
                             View on Blockscout
                         </a>
+                    )}
+                    {isSocialReceipt && (
+                        <button
+                            onClick={openMiniPayInviteFriends}
+                            className="w-full py-5 bg-white border-2 border-primary/15 text-primary font-black rounded-2xl flex items-center justify-center gap-2 hover:bg-primary/5 transition-all active:scale-95"
+                        >
+                            <span className="material-symbols-outlined !text-xl">person_add</span>
+                            Invite Friends in MiniPay
+                        </button>
                     )}
                     <button onClick={() => router.push('/')} className="w-full py-5 bg-primary text-white font-black rounded-2xl shadow-xl shadow-primary/20 hover:bg-primary/90 active:scale-95 transition-all">
                         Done
