@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { createReceiptUrl } from '@/lib/receipts';
 import { useActiveWalletAddress } from '@/lib/active-wallet';
 import { getErrorMessage, validateTokenAmount } from '@/lib/transaction-validation';
+import { openMiniPayInviteFriends, openMiniPayQr } from '@/lib/minipay';
 
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -597,6 +598,22 @@ function PotCard({ address }: { address: PotAddress }) {
                                         <span className="material-symbols-outlined text-[14px]">content_copy</span>
                                         Copy Pot Address
                                     </button>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={openMiniPayInviteFriends}
+                                            className="w-full bg-primary/10 text-primary py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.18em] flex items-center justify-center gap-2 hover:bg-primary/15 transition-all active:scale-95"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px]">person_add</span>
+                                            Invite
+                                        </button>
+                                        <button
+                                            onClick={openMiniPayQr}
+                                            className="w-full bg-slate-100 text-slate-900 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.18em] flex items-center justify-center gap-2 hover:bg-slate-200 transition-all active:scale-95"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px]">qr_code_2</span>
+                                            QR
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

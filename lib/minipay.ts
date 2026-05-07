@@ -8,6 +8,8 @@ type EthereumProvider = {
 
 export const MINIPAY_ADD_CASH_URL = 'https://link.minipay.xyz/add_cash?tokens=CUSD';
 export const MINIPAY_DISCOVER_URL = 'https://link.minipay.xyz/discover';
+export const MINIPAY_QR_URL = 'https://link.minipay.xyz/qr';
+export const MINIPAY_INVITE_FRIENDS_URL = 'https://link.minipay.xyz/invite_friends';
 
 function getEthereumProvider(): EthereumProvider | undefined {
     if (typeof window === 'undefined') {
@@ -82,6 +84,22 @@ export function openMiniPayDiscover() {
     }
 
     window.open(MINIPAY_DISCOVER_URL, '_blank');
+}
+
+export function openMiniPayQr() {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    window.open(MINIPAY_QR_URL, '_blank');
+}
+
+export function openMiniPayInviteFriends() {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    window.open(MINIPAY_INVITE_FRIENDS_URL, '_blank');
 }
 
 export function useMiniPay() {
