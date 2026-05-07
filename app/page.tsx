@@ -256,7 +256,7 @@ export default function DashboardPage() {
                 
                 <div className="space-y-4">
                     <div className="flex justify-between items-center px-1">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Flagship Flow</h3>
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Social Pots</h3>
                         <span className="flex items-center gap-1.5 text-[9px] font-black text-amber-700 uppercase tracking-widest">
                             <span className="size-1.5 rounded-full bg-amber-500" /> Group Savings
                         </span>
@@ -310,7 +310,7 @@ export default function DashboardPage() {
 
                 <div className="space-y-4">
                     <div className="flex justify-between items-center px-1">
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Personal Save</h3>
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Savings Balance</h3>
                         {hasYield && <span className="flex items-center gap-1.5 text-[9px] font-black text-success uppercase tracking-widest animate-pulse">
                             <span className="size-1.5 rounded-full bg-success" /> Balance Active
                         </span>}
@@ -339,20 +339,35 @@ export default function DashboardPage() {
                     </Link>
                 </div>
 
-                {/* Quick Shortcuts */}
-                <div className="grid grid-cols-3 gap-6">
+                {/* Core Actions */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between px-1">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Core Actions</h3>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Add cash, then save or join</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                     {[
-                        { href: '/social', name: 'Pots', icon: 'groups', color: '#B45309' },
-                        { href: '/save', name: 'Save', icon: 'savings', color: '#0F766E' },
-                        { href: '/wallet', name: 'History', icon: 'history', color: '#64748b' },
+                        { href: '/buy', name: 'Add Cash', icon: 'add_card', tone: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/10' },
+                        { href: '/social', name: 'Social Pots', icon: 'groups', tone: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
+                        { href: '/save', name: 'Save', icon: 'savings', tone: 'text-success', bg: 'bg-success/5', border: 'border-success/10' },
+                        { href: '/wallet', name: 'Wallet', icon: 'account_balance_wallet', tone: 'text-slate-700', bg: 'bg-slate-50', border: 'border-slate-200' },
                     ].map((btn) => (
-                        <Link key={btn.name} href={btn.href} className="flex flex-col items-center gap-3 group">
-                            <div className="size-16 rounded-[24px] bg-white shadow-sm flex items-center justify-center border border-slate-100 group-hover:border-primary group-hover:shadow-lg group-hover:shadow-primary/5 transition-all text-slate-400 group-hover:text-primary">
+                        <Link key={btn.name} href={btn.href} className="rounded-[28px] border p-5 bg-white shadow-sm transition-all hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]">
+                            <div className={`size-14 rounded-[20px] border flex items-center justify-center ${btn.bg} ${btn.border} ${btn.tone}`}>
                                 <span className="material-symbols-outlined text-3xl">{btn.icon}</span>
                             </div>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{btn.name}</span>
+                            <div className="mt-4 space-y-1">
+                                <p className="text-sm font-black text-slate-900 italic tracking-tight">{btn.name}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    {btn.href === '/buy' && 'Fund with MiniPay'}
+                                    {btn.href === '/social' && 'Create or join'}
+                                    {btn.href === '/save' && 'Set money aside'}
+                                    {btn.href === '/wallet' && 'View balances'}
+                                </p>
+                            </div>
                         </Link>
                     ))}
+                    </div>
                 </div>
 
                 {/* Activity Feed */}
