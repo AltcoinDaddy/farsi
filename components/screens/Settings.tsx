@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Moon, Lock } from 'lucide-react';
+import { User, Shield, Bell, HelpCircle, LogOut, ChevronRight, Globe, Moon, Lock, FileText } from 'lucide-react';
 import { usePrivy } from '@privy-io/react-auth';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/lib/theme-context';
@@ -53,8 +53,9 @@ export default function SettingsScreen() {
             items: [
                 { icon: Globe, label: 'Open in MiniPay', detail: 'Launch the listed Mini App', color: 'text-primary', bg: 'bg-blue-50', onClick: handleOpenInMiniPay },
                 { icon: Globe, label: 'Browse Mini Apps', detail: 'Open the MiniPay discover tab', color: 'text-emerald-500', bg: 'bg-emerald-50', onClick: openMiniPayDiscover },
-                { icon: HelpCircle, label: 'Help Center', detail: '', color: 'text-blue-500', bg: 'bg-blue-50' },
-                { icon: Lock, label: 'Privacy Policy', detail: '', color: 'text-slate-500', bg: 'bg-slate-50' },
+                { icon: HelpCircle, label: 'Help Center', detail: 'Support and issue reporting', color: 'text-blue-500', bg: 'bg-blue-50', onClick: () => router.push('/support') },
+                { icon: Lock, label: 'Privacy Policy', detail: 'How testnet data is handled', color: 'text-slate-500', bg: 'bg-slate-50', onClick: () => router.push('/privacy') },
+                { icon: FileText, label: 'Terms of Use', detail: 'Rules for the MiniPay preview', color: 'text-amber-600', bg: 'bg-amber-50', onClick: () => router.push('/terms') },
             ]
         }
     ];
