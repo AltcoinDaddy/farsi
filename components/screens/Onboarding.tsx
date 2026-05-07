@@ -196,7 +196,7 @@ export default function Onboarding() {
                             <ShieldCheck size={36} strokeWidth={2.25} />
                         </div>
                         <h1 className="text-3xl font-bold text-neutral-dark tracking-tight">You&apos;re all set!</h1>
-                        <p className="text-neutral-muted font-medium leading-relaxed">Your smart account is secure and ready for your first deposit.</p>
+                        <p className="text-neutral-muted font-medium leading-relaxed">Your wallet is connected and ready for your first testnet action in Farsi.</p>
                         <div className="pt-8 space-y-4">
                             <button
                                 onClick={() => {

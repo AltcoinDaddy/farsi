@@ -30,7 +30,7 @@ export function createReceiptUrl(
 }
 
 export function getReceiptFeeLabel(feeMode: TransactionFeeMode) {
-    return feeMode === 'configured' ? 'Configured Sponsorship' : 'Native CELO';
+    return feeMode === 'configured' ? 'Configured Route' : 'Native CELO';
 }
 
 export function createExplorerReceiptUrl(hash: string) {

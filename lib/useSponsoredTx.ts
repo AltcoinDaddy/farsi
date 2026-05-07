@@ -3,14 +3,10 @@ import { getSponsorshipState } from './aa-config';
 import { toast } from 'sonner';
 
 /**
- * Farsi DeFi Gas Sponsorship Wrapper
- * 
- * Replaces useWriteContract to automatically route transactions
- * through the ZeroDev Paymaster when configured.
- * 
- * For the Hackathon Demo, this gracefully falls back to normal
- * EOA transactions if the ZeroDev ID hasn't been added yet,
- * ensuring the demo still works even without a valid paymaster.
+ * Transaction write wrapper
+ *
+ * Uses the standard wallet write path by default and only surfaces
+ * alternate transaction routing when the current environment has it configured.
  */
 export function useSponsoredWriteContract() {
     const { writeContractAsync, ...rest } = useWriteContract();
@@ -22,9 +18,9 @@ export function useSponsoredWriteContract() {
         }
 
         try {
-            toast('Using configured transaction mode...', {
+            toast('Using configured transaction route...', {
                 description:
-                    'This write uses the current smart-account sponsorship setup when available.',
+                    'This write uses the current environment configuration for transaction routing.',
                 icon: '⚙️',
             });
 

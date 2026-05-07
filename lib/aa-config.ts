@@ -32,9 +32,9 @@ export function getSponsorshipState() {
     return {
         isConfigured,
         feeMode: (isConfigured ? 'configured' : 'native') as TransactionFeeMode,
-        feeLabel: isConfigured ? 'Configured Sponsorship' : 'Native CELO',
+        feeLabel: isConfigured ? 'Configured Route' : 'Native CELO',
         feeDescription: isConfigured
-            ? 'Uses the configured smart-account sponsorship path when available.'
+            ? 'Uses the configured transaction route for this environment.'
             : 'Requires the wallet to pay Celo network gas.',
     };
 }

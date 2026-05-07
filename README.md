@@ -1,6 +1,6 @@
 # Farsi: Save Together on Celo
 
-Farsi is a premium mobile-first savings application built on **Celo** for **MiniPay-style stablecoin users**. It simplifies blockchain interactions into a natural, high-fidelity experience, enabling users to save, contribute, and move digital dollars effortlessly.
+Farsi is a mobile-first savings application built on **Celo** for **MiniPay-style stablecoin users**. It simplifies blockchain interactions into a guided experience for saving, contributing, and moving digital dollars on testnet.
 
 ---
 
@@ -18,19 +18,19 @@ Our mission is simple: **Financial freedom, simplified.** No seed phrase drama, 
 ##  Core Features
 
 ###  **On-Chain Proof (Verifiable Receipts)**
-Trust, but verify. Every action in Farsi generates a dynamic, high-fidelity receipt. These receipts are linked to **Blockscout on Celo Sepolia**, providing instant, transparent proof of each transaction.
+Trust, but verify. Every action in Farsi generates a receipt linked to **Blockscout on Celo Sepolia**, so testnet transactions can be checked directly onchain.
 
-###  **Live Wallet**
-Stay on top of your assets. Our real-time wallet pulls directly from **Celo Sepolia**, showing your live **cUSD** and **CELO** balances. Every transaction is block-synced and authentic.
+###  **Wallet Snapshot**
+Stay on top of your assets. The wallet reads directly from **Celo Sepolia**, showing current **cUSD** and **CELO** balances for the connected account.
 
 ###  **Smart Save**
-Don't let your money sit idle. Farsi Save connects you to a simple savings vault. Deposit your cUSD with a tap and withdraw whenever you want while we validate the full MiniPay-native savings experience.
+Farsi Save connects you to a simple savings vault on testnet. Deposit cUSD with a tap and withdraw whenever you want while the product direction is still being validated.
 
 ###  **Social Pots (Save with Friends)**
 Project savings, group gifts, or trip funds—on-chain. Create a "Social Pot," set a goal, and invite friends to contribute. It’s transparent, social, and the money is only accessible once the group hits the target.
 
 ###  **Global Send**
-Seamless P2P transfers. Send cUSD to anyone on Celo instantly. When sponsorship is configured, the app can use that path for fees; otherwise the wallet pays standard CELO gas.
+Simple P2P transfers. Send cUSD to another address on Celo. If an alternate transaction path is configured for the current environment, the app uses it; otherwise the wallet pays standard CELO gas.
 
 ###  **Focused v1**
 Farsi is deliberately centered on **Save, Pots, and Send** for the current MiniPay/Celo version. Spend flows are parked until there is a real MiniPay-native payment or cash-out path to support them.
@@ -41,8 +41,8 @@ Farsi is deliberately centered on **Save, Pots, and Send** for the current MiniP
 
 We’ve hidden the complexity of blockchain behind a premium interface:
 
-- **Flexible Gas Handling**: The app can use a configured sponsorship path for supported setups, or fall back to standard CELO gas when sponsorship is not enabled.
-- **Log in your way**: Use your email or social media through **Privy**. Behind the scenes, we create a secure **Smart Account** for you instantly.
+- **Flexible Gas Handling**: The app can use a configured transaction path for supported setups, or fall back to standard CELO gas.
+- **Log in your way**: Use your email or social media through **Privy**. In MiniPay, the app can also rely on the injected wallet session.
 - **Always With You**: Farsi is a Progressive Web App (PWA). Just "Add to Home Screen" and it feels just like a native app.
 - **Premium UX**: Smooth transitions, vibrant toast notifications (`sonner`), and high-fidelity receipts.
 
