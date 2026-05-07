@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, ShieldCheck, User, Wallet } from 'lucide-react';
 import { useAccount, useConnect } from 'wagmi';
+import { toast } from 'sonner';
 import { getPrivyWalletAddress } from '@/lib/active-wallet';
-import { openMiniPayAddCash, useMiniPay } from '@/lib/minipay';
+import { openMiniPayAddCash, openMiniPayBrowse, openMiniPayDiscover, useMiniPay } from '@/lib/minipay';
 
 const PREVIEW_SESSION_KEY = 'farsi_preview_session';
 
@@ -55,6 +56,16 @@ export default function Onboarding() {
         );
         if (injectedConnector) {
             connect({ connector: injectedConnector });
+        }
+    };
+
+    const handleOpenInMiniPay = () => {
+        const didOpen = openMiniPayBrowse();
+
+        if (!didOpen) {
+            toast.info('MiniPay listing link not ready yet', {
+                description: 'Add NEXT_PUBLIC_MINIPAY_APP_URL after you have a public HTTPS app URL to enable this deeplink.',
+            });
         }
     };
 
@@ -111,13 +122,29 @@ export default function Onboarding() {
                                 </button>
                             )}
                             {showPreviewFallback && (
-                                <button
-                                    onClick={handlePreviewApp}
-                                    className="w-full mt-3 border border-slate-200 text-neutral-dark font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-all"
-                                >
-                                    Preview the App
-                                    <ChevronRight size={18} />
-                                </button>
+                                <div className="mt-3 space-y-3">
+                                    <button
+                                        onClick={handlePreviewApp}
+                                        className="w-full border border-slate-200 text-neutral-dark font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-all"
+                                    >
+                                        Preview the App
+                                        <ChevronRight size={18} />
+                                    </button>
+                                    <button
+                                        onClick={handleOpenInMiniPay}
+                                        className="w-full border border-primary/20 text-primary font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-primary/5 transition-all"
+                                    >
+                                        Open in MiniPay
+                                        <ChevronRight size={18} />
+                                    </button>
+                                    <button
+                                        onClick={openMiniPayDiscover}
+                                        className="w-full border border-slate-200 text-neutral-dark font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-50 transition-all"
+                                    >
+                                        Browse Mini Apps
+                                        <ChevronRight size={18} />
+                                    </button>
+                                </div>
                             )}
                             <p className="text-center text-[10px] text-neutral-muted mt-4">
                                 {isMiniPay
